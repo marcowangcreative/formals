@@ -205,7 +205,7 @@
 
   <div class="panel">
     <h2>Add New Event</h2>
-    <form class="new-form" onsubmit="createEvent(event)">
+    <form class="new-form" onsubmit="createEvent(event); return false;">
       <div class="field">
         <label>Couple Names</label>
         <input type="text" id="newCouple" placeholder="e.g. Maria & David Bueso" required>
@@ -418,8 +418,8 @@
       toast('Event created · ' + slug);
       await refreshEvents();
     } catch (err) {
-      console.error(err);
-      toast('Error: ' + err.message);
+      console.error('createEvent failed', err);
+      alert('Create event failed:\n\n' + (err.message || JSON.stringify(err)) + '\n\nFull error in DevTools console.');
     }
   }
 
