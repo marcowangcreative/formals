@@ -205,7 +205,7 @@
 
   <div class="panel">
     <h2>Add New Event</h2>
-    <form class="new-form" onsubmit="createEvent(event); return false;">
+    <div class="new-form">
       <div class="field">
         <label>Couple Names</label>
         <input type="text" id="newCouple" placeholder="e.g. Maria & David Bueso" required>
@@ -214,8 +214,9 @@
         <label>Slug <span style="text-transform:none;color:var(--muted);font-style:italic">(URL key, auto-generated)</span></label>
         <input type="text" id="newSlug" placeholder="auto from couple names">
       </div>
-      <button class="btn" type="submit">Create Event</button>
-    </form>
+      <button class="btn" type="button" onclick="createEvent(event)">Create Event</button>
+    </div>
+    <pre id="debugLog" style="display:none;background:#fdecec;border:1px solid #c08060;color:#8b2a2a;padding:12px;margin-top:14px;font-size:12px;white-space:pre-wrap;word-break:break-word;"></pre>
   </div>
 
   <div class="panel">
@@ -404,7 +405,9 @@
   }
 
   async function createEvent(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    const debugEl = document.getElementById('debugLog');
+    debugEl.style.display = 'none';
     const couple = document.getElementById('newCouple').value.trim();
     let slug = document.getElementById('newSlug').value.trim();
     if (!slug) slug = slugify(couple) + '-' + randomSuffix();
@@ -419,7 +422,13 @@
       await refreshEvents();
     } catch (err) {
       console.error('createEvent failed', err);
-      alert('Create event failed:\n\n' + (err.message || JSON.stringify(err)) + '\n\nFull error in DevTools console.');
+      debugEl.textContent = 'CREATE EVENT FAILED\n\n'
+        + 'message: ' + (err.message || '(none)') + '\n'
+        + 'code: ' + (err.code || '(none)') + '\n'
+        + 'details: ' + (err.details || '(none)') + '\n'
+        + 'hint: ' + (err.hint || '(none)') + '\n\n'
+        + 'full: ' + JSON.stringify(err, Object.getOwnPropertyNames(err), 2);
+      debugEl.style.display = 'block';
     }
   }
 
