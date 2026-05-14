@@ -243,7 +243,7 @@
   const SHOTLIST_PATH = 'wedding-shot-list.html';
 
   const cloudConfigured = SUPABASE_URL.startsWith('http') && !SUPABASE_URL.includes('YOUR_');
-  let supabase = null;
+  let db = null;
 
   // ============ Passphrase Gate ============
   function checkGate() {
@@ -326,7 +326,7 @@
       document.getElementById('eventsContainer').innerHTML = '<p class="empty">Configure Supabase to load events.</p>';
       return;
     }
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     await refreshEvents();
   }
 
@@ -334,7 +334,7 @@
     const container = document.getElementById('eventsContainer');
     container.innerHTML = '<p class="empty">Loading…</p>';
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('events')
         .select('slug, couple_names, data, updated_at, created_at')
         .order('updated_at', { ascending: false });
@@ -410,7 +410,7 @@
     if (!slug) slug = slugify(couple) + '-' + randomSuffix();
     if (!cloudConfigured) { toast('Configure Supabase first'); return; }
     try {
-      const { error } = await supabase.from('events').insert({ slug, couple_names: couple, data: {} });
+      const { error } = await db.from('events').insert({ slug, couple_names: couple, data: {} });
       if (error) throw error;
       document.getElementById('newCouple').value = '';
       document.getElementById('newSlug').value = '';
@@ -436,7 +436,7 @@
   async function deleteEvent(slug) {
     if (!confirm(`Delete event "${slug}"? This cannot be undone.`)) return;
     try {
-      const { error } = await supabase.from('events').delete().eq('slug', slug);
+      const { error } = await db.from('events').delete().eq('slug', slug);
       if (error) throw error;
       toast('Deleted · ' + slug);
       await refreshEvents();

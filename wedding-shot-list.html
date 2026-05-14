@@ -425,7 +425,7 @@
   const cloudMode = !!slug && cloudConfigured;
   const STORAGE_KEY = slug ? `weddingShotList_${slug}` : 'weddingShotList_v1';
 
-  let supabase = null;
+  let db = null;
   let saveTimer = null;
   let lastRemotePayload = null;
   let isApplyingRemote = false;
@@ -450,7 +450,7 @@
   async function loadCloud() {
     setStatus('Loading…', 'syncing');
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('events').select('data, couple_names').eq('slug', slug).maybeSingle();
       if (error) throw error;
       if (data && data.data && Object.keys(data.data).length) {
@@ -458,7 +458,7 @@
         lastRemotePayload = JSON.stringify(data.data);
       } else if (!data) {
         // First-time event — create the row
-        await supabase.from('events').insert({ slug, data: {} });
+        await db.from('events').insert({ slug, data: {} });
       }
       const who = data && data.couple_names ? data.couple_names : slug;
       setStatus(`Synced · ${who}`, 'saved');
@@ -478,7 +478,7 @@
     saveTimer = setTimeout(async () => {
       try {
         const payload = JSON.parse(JSON.stringify(state));
-        const { error } = await supabase
+        const { error } = await db
           .from('events')
           .update({ data: payload, updated_at: new Date().toISOString() })
           .eq('slug', slug);
@@ -495,7 +495,7 @@
 
   function subscribeRealtime() {
     if (!cloudMode) return;
-    supabase.channel(`event-${slug}`)
+    db.channel(`event-${slug}`)
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'events', filter: `slug=eq.${slug}` },
         (payload) => {
@@ -709,7 +709,7 @@
     if (cloudMode) {
       try {
         isApplyingRemote = true;
-        await supabase.from('events').update({ data: {} }).eq('slug', slug);
+        await db.from('events').update({ data: {} }).eq('slug', slug);
       } catch (e) { console.error(e); }
       isApplyingRemote = false;
     }
@@ -732,7 +732,7 @@
   // ============ Init ============
   (async function init() {
     if (cloudMode) {
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       await loadCloud();
       subscribeRealtime();
     } else {
