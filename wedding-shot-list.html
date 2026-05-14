@@ -351,6 +351,17 @@
   .sync-status.error { color: #c08060; border-color: #c08060; }
   .sync-status.offline { color: var(--muted); }
   @media print { .sync-status { display: none !important; } }
+  .back-link {
+    display: inline-block;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    margin-bottom: 14px;
+  }
+  .back-link:hover { color: var(--accent); }
+  @media print { .back-link { display: none !important; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
@@ -359,6 +370,7 @@
 <div class="sync-status" id="syncStatus"></div>
 <div class="container">
   <header>
+    <a href="admin.html" class="back-link">← All Events</a>
     <h1>Formal Photo Shot List</h1>
     <p>After the ceremony — for the photographer to call out</p>
   </header>
