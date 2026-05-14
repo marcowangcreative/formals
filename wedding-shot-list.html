@@ -371,14 +371,19 @@
 <div class="container">
   <header>
     <a href="admin.html" class="back-link">← All Events</a>
-    <h1>Formal Photo Shot List</h1>
-    <p>After the ceremony — for the photographer to call out</p>
+    <h1 id="headerTitle">Formal Photo Shot List</h1>
+    <p id="headerMeta">After the ceremony — for the photographer to call out</p>
   </header>
 
   <div class="layout">
     <!-- INPUT PANEL -->
     <div class="panel input-panel">
       <h2>Family &amp; Wedding Party</h2>
+
+      <div class="role-group">
+        <h3>Event</h3>
+        <div class="field-row"><label>Date</label><input type="date" data-key="eventDate"></div>
+      </div>
 
       <div class="role-group">
         <h3>The Couple</h3>
@@ -476,7 +481,33 @@
     custom: [],
     sortMode: 'default',
     customOrder: [],
+    eventDate: '',
   };
+
+  let coupleNames = '';
+
+  function formatEventDate(iso) {
+    if (!iso) return '';
+    const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return '';
+    const dt = new Date(+m[1], +m[2] - 1, +m[3]);
+    if (isNaN(dt.getTime())) return '';
+    return dt.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  function updateHeader() {
+    const titleEl = document.getElementById('headerTitle');
+    const metaEl = document.getElementById('headerMeta');
+    if (!titleEl || !metaEl) return;
+    const dateStr = formatEventDate(state.eventDate);
+    if (coupleNames) {
+      titleEl.textContent = coupleNames;
+      metaEl.textContent = dateStr ? `${dateStr} · Formal Photo Shot List` : 'Formal Photo Shot List';
+    } else {
+      titleEl.textContent = 'Formal Photo Shot List';
+      metaEl.textContent = dateStr ? `${dateStr} · For the photographer to call out` : 'After the ceremony — for the photographer to call out';
+    }
+  }
 
   // ============ Cloud Config ============
   // Paste your Supabase project URL + anon key here.
@@ -525,7 +556,9 @@
         // First-time event — create the row
         await db.from('events').insert({ slug, data: {} });
       }
-      const who = data && data.couple_names ? data.couple_names : slug;
+      coupleNames = (data && data.couple_names) ? data.couple_names : '';
+      updateHeader();
+      const who = coupleNames || slug;
       setStatus(`Synced · ${who}`, 'saved');
       return true;
     } catch (e) {
@@ -577,6 +610,7 @@
           saveLocal();
           renderInputs();
           renderShots();
+          updateHeader();
           isApplyingRemote = false;
           setStatus(`Updated · ${slug}`, 'saved');
         }
@@ -780,6 +814,14 @@
 
   // ============ Event wiring ============
   document.querySelectorAll('input[data-key]').forEach(input => {
+    if (input.type === 'date') {
+      input.addEventListener('input', () => {
+        state[input.dataset.key] = input.value;
+        saveState();
+        updateHeader();
+      });
+      return;
+    }
     input.setAttribute('autocapitalize', 'words');
     input.addEventListener('input', () => {
       state[input.dataset.key] = input.value;
@@ -899,6 +941,7 @@
     }
     renderInputs();
     renderShots();
+    updateHeader();
   })();
 </script>
 </body>
