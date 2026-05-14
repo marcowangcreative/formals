@@ -208,7 +208,7 @@
     <div class="new-form">
       <div class="field">
         <label>Couple Names</label>
-        <input type="text" id="newCouple" placeholder="e.g. Maria & David Bueso" required>
+        <input type="text" id="newCouple" placeholder="e.g. Maria & David Bueso" autocapitalize="words" required>
       </div>
       <div class="field">
         <label>Slug <span style="text-transform:none;color:var(--muted);font-style:italic">(URL key, auto-generated)</span></label>
@@ -405,11 +405,15 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  function titleCaseName(s) {
+    return String(s || '').toLowerCase().replace(/\b([a-z])/g, c => c.toUpperCase());
+  }
+
   async function addNewEvent(e) {
     if (e && e.preventDefault) e.preventDefault();
     const debugEl = document.getElementById('debugLog');
     debugEl.style.display = 'none';
-    const couple = document.getElementById('newCouple').value.trim();
+    const couple = titleCaseName(document.getElementById('newCouple').value.trim());
     let slug = document.getElementById('newSlug').value.trim();
     if (!slug) slug = slugify(couple) + '-' + randomSuffix();
     if (!cloudConfigured) { toast('Configure Supabase first'); return; }
@@ -448,7 +452,7 @@
     const current = row ? row.querySelector('.couple-name').textContent : '';
     const updated = prompt('New couple name:', current);
     if (updated === null) return;
-    const trimmed = updated.trim();
+    const trimmed = titleCaseName(updated.trim());
     if (!trimmed) { toast('Name cannot be empty'); return; }
     if (trimmed === current) return;
     try {

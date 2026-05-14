@@ -598,6 +598,10 @@
   };
   const ALL = (...parts) => parts.filter(Boolean).join(' + ');
 
+  function toTitleCase(s) {
+    return String(s || '').toLowerCase().replace(/\b([a-z])/g, c => c.toUpperCase());
+  }
+
   function shotSize(text) {
     const plain = String(text).replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
     return plain.split(/\s*[+&,]\s*/).filter(Boolean).length;
@@ -776,10 +780,20 @@
 
   // ============ Event wiring ============
   document.querySelectorAll('input[data-key]').forEach(input => {
+    input.setAttribute('autocapitalize', 'words');
     input.addEventListener('input', () => {
       state[input.dataset.key] = input.value;
       saveState();
       renderShots();
+    });
+    input.addEventListener('blur', () => {
+      const titled = toTitleCase(input.value.trim());
+      if (titled && titled !== input.value) {
+        input.value = titled;
+        state[input.dataset.key] = titled;
+        saveState();
+        renderShots();
+      }
     });
   });
 
@@ -787,10 +801,11 @@
     const key = container.dataset.multi;
     if (!state[key]) state[key] = [];
     const input = container.querySelector('input');
+    input.setAttribute('autocapitalize', 'words');
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ',') {
         e.preventDefault();
-        const val = input.value.trim().replace(/,$/, '');
+        const val = toTitleCase(input.value.trim().replace(/,$/, ''));
         if (val && !state[key].includes(val)) {
           state[key].push(val);
           input.value = '';
@@ -806,7 +821,7 @@
       }
     });
     input.addEventListener('blur', () => {
-      const val = input.value.trim();
+      const val = toTitleCase(input.value.trim());
       if (val && !state[key].includes(val)) {
         state[key].push(val);
         input.value = '';
