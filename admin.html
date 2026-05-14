@@ -354,31 +354,55 @@
     }
   }
 
+  function fmtEventDate(iso) {
+    if (!iso) return '';
+    const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return '';
+    const dt = new Date(+m[1], +m[2] - 1, +m[3]);
+    if (isNaN(dt.getTime())) return '';
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function eventDateKey(ev) {
+    const iso = ev && ev.data && ev.data.eventDate;
+    if (!iso) return Number.POSITIVE_INFINITY;
+    const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return Number.POSITIVE_INFINITY;
+    return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
+  }
+
   function renderEvents(events) {
     const container = document.getElementById('eventsContainer');
     if (!events.length) {
       container.innerHTML = '<p class="empty">No events yet — add one above.</p>';
       return;
     }
+    const sorted = events.slice().sort((a, b) => eventDateKey(a) - eventDateKey(b));
     let html = `
       <table>
         <thead>
           <tr>
             <th>Couple</th>
+            <th>Event Date</th>
             <th>Names Entered</th>
             <th>Last Update</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>`;
-    for (const ev of events) {
+    for (const ev of sorted) {
       const d = ev.data || {};
       const named = [d.bride, d.groom].filter(Boolean).join(' & ') || '—';
       const couple = ev.couple_names || named;
       const nameCount = countNames(d);
+      const dateDisplay = fmtEventDate(d.eventDate);
+      const dateCell = dateDisplay
+        ? `<span>${escapeHtml(dateDisplay)}</span>`
+        : `<span style="color:var(--muted); font-style:italic;">—</span>`;
       html += `
         <tr data-slug="${escapeHtml(ev.slug)}">
           <td class="couple-name">${escapeHtml(couple)}</td>
+          <td>${dateCell}</td>
           <td>${nameCount} ${nameCount === 1 ? 'person' : 'people'}</td>
           <td style="color:var(--muted)">${fmtDate(ev.updated_at)}</td>
           <td>
