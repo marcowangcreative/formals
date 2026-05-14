@@ -272,13 +272,51 @@
     padding: 0 4px;
     opacity: 0.4;
   }
+  .sort-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0 14px;
+    border-bottom: 1px solid var(--soft);
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .sort-bar select {
+    padding: 4px 6px;
+    font-size: 13px;
+    font-family: inherit;
+    border: 1px solid var(--line);
+    background: white;
+    color: var(--ink);
+    border-radius: 2px;
+  }
+  .move-btns { display: inline-flex; flex-direction: column; gap: 1px; margin-right: 4px; }
+  .move-btn {
+    background: none;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+  .move-btn:hover { color: var(--ink); border-color: var(--accent); }
+  .move-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .shot-count-badge {
+    margin-left: 8px;
+    color: var(--muted);
+    font-size: 11px;
+    font-style: italic;
+  }
   .remove-shot:hover { opacity: 1; color: #c08060; }
 
   /* Print view */
   @media print {
     body { background: white; }
     .container { max-width: none; padding: 16px; }
-    .panel.input-panel, .actions, .custom-add, .summary-bar, .shot-check, .remove-shot { display: none !important; }
+    .panel.input-panel, .actions, .custom-add, .summary-bar, .shot-check, .remove-shot, .sort-bar, .move-btns { display: none !important; }
     .layout { grid-template-columns: 1fr; }
     .panel { border: none; padding: 0; }
     .shot-item.disabled { display: none; }
@@ -383,6 +421,15 @@
         <span><strong id="shotCount">0</strong> shots selected</span>
         <span id="missingNote"></span>
       </div>
+      <div class="sort-bar">
+        <label for="sortMode">Order:</label>
+        <select id="sortMode">
+          <option value="default">Default (ceremony flow)</option>
+          <option value="largest">Largest groups first</option>
+          <option value="smallest">Smallest groups first</option>
+          <option value="custom">Custom — use ↑↓ arrows</option>
+        </select>
+      </div>
       <ul class="shot-list" id="shotList"></ul>
 
       <div class="custom-add">
@@ -411,6 +458,8 @@
     bridesmaids: [], groomsmen: [],
     disabled: {},
     custom: [],
+    sortMode: 'default',
+    customOrder: [],
   };
 
   // ============ Cloud Config ============
@@ -533,6 +582,47 @@
   };
   const ALL = (...parts) => parts.filter(Boolean).join(' + ');
 
+  function shotSize(text) {
+    const plain = String(text).replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
+    return plain.split(/\s*[+&,]\s*/).filter(Boolean).length;
+  }
+
+  function getOrderedShots() {
+    const shots = buildShots();
+    shots.forEach(s => { s.count = shotSize(s.text); });
+    const mode = state.sortMode || 'default';
+    if (mode === 'largest') {
+      return shots.slice().sort((a, b) => b.count - a.count);
+    }
+    if (mode === 'smallest') {
+      return shots.slice().sort((a, b) => a.count - b.count);
+    }
+    if (mode === 'custom') {
+      let order = (state.customOrder || []).slice();
+      shots.forEach(s => { if (!order.includes(s.id)) order.push(s.id); });
+      order = order.filter(id => shots.some(s => s.id === id));
+      const rank = id => { const i = order.indexOf(id); return i === -1 ? Infinity : i; };
+      return shots.slice().sort((a, b) => rank(a.id) - rank(b.id));
+    }
+    return shots;
+  }
+
+  function moveShot(id, delta) {
+    const shots = buildShots();
+    let order = (state.customOrder && state.customOrder.length)
+      ? state.customOrder.slice()
+      : getOrderedShots().map(s => s.id);
+    shots.forEach(s => { if (!order.includes(s.id)) order.push(s.id); });
+    order = order.filter(id => shots.some(s => s.id === id));
+    const idx = order.indexOf(id);
+    const newIdx = idx + delta;
+    if (idx === -1 || newIdx < 0 || newIdx >= order.length) return;
+    [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
+    state.customOrder = order;
+    saveState();
+    renderShots();
+  }
+
   // ============ Shot Definitions ============
   function buildShots() {
     const s = state;
@@ -606,20 +696,30 @@
   }
 
   function renderShots() {
-    const shots = buildShots();
+    const shots = getOrderedShots();
     const ul = document.getElementById('shotList');
     ul.innerHTML = '';
     let activeCount = 0;
-    shots.forEach(shot => {
+    const isCustom = (state.sortMode || 'default') === 'custom';
+    shots.forEach((shot, i) => {
       const isDisabled = !!state.disabled[shot.id];
       if (!isDisabled) activeCount++;
       const li = document.createElement('li');
       li.className = 'shot-item' + (isDisabled ? ' disabled' : '');
+      const moveBtns = isCustom
+        ? `<span class="move-btns">
+             <button class="move-btn move-up" title="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
+             <button class="move-btn move-down" title="Move down" ${i === shots.length - 1 ? 'disabled' : ''}>↓</button>
+           </span>`
+        : '';
+      const sizeBadge = (state.sortMode === 'largest' || state.sortMode === 'smallest')
+        ? `<span class="shot-count-badge">(${shot.count})</span>` : '';
       li.innerHTML = `
         <input type="checkbox" class="shot-check" ${!isDisabled ? 'checked' : ''}>
+        ${moveBtns}
         <span class="shot-num"></span>
         <div class="shot-text">
-          <span class="shot-label">${shot.label}</span>
+          <span class="shot-label">${shot.label}${sizeBadge}</span>
           <span class="shot-names">${shot.text}</span>
         </div>
         ${shot.custom ? '<button class="remove-shot" title="Remove">×</button>' : ''}
@@ -630,6 +730,10 @@
         saveState();
         renderShots();
       };
+      if (isCustom) {
+        li.querySelector('.move-up').onclick = () => moveShot(shot.id, -1);
+        li.querySelector('.move-down').onclick = () => moveShot(shot.id, 1);
+      }
       if (shot.custom) {
         li.querySelector('.remove-shot').onclick = () => {
           state.custom.splice(shot.customIndex, 1);
@@ -639,6 +743,10 @@
       }
       ul.appendChild(li);
     });
+    const sortSelect = document.getElementById('sortMode');
+    if (sortSelect && sortSelect.value !== (state.sortMode || 'default')) {
+      sortSelect.value = state.sortMode || 'default';
+    }
     document.getElementById('shotCount').textContent = activeCount;
     // Missing-names warning
     const hasMissing = ul.querySelector('.missing');
@@ -690,6 +798,18 @@
     });
   });
 
+  document.getElementById('sortMode').addEventListener('change', (e) => {
+    const prevMode = state.sortMode || 'default';
+    const newMode = e.target.value;
+    if (newMode === 'custom' && (!state.customOrder || !state.customOrder.length)) {
+      state.sortMode = prevMode;
+      state.customOrder = getOrderedShots().map(s => s.id);
+    }
+    state.sortMode = newMode;
+    saveState();
+    renderShots();
+  });
+
   function addCustomShot() {
     const input = document.getElementById('customShotInput');
     const val = input.value.trim();
@@ -718,7 +838,7 @@
   }
 
   function copyShotList() {
-    const shots = buildShots().filter(s => !state.disabled[s.id]);
+    const shots = getOrderedShots().filter(s => !state.disabled[s.id]);
     const lines = shots.map((s, i) => {
       const plain = s.text.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
       return `${i + 1}. ${s.label}: ${plain}`;
