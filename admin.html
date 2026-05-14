@@ -65,7 +65,7 @@
 
   .new-form {
     display: grid;
-    grid-template-columns: 1.4fr 1fr auto;
+    grid-template-columns: 1fr auto;
     gap: 18px;
     align-items: end;
   }
@@ -221,10 +221,6 @@
         <label>Couple Names</label>
         <input type="text" id="newCouple" placeholder="e.g. Maria & David Bueso" autocapitalize="words" required>
       </div>
-      <div class="field">
-        <label>Slug <span style="text-transform:none;color:var(--muted);font-style:italic">(URL key, auto-generated)</span></label>
-        <input type="text" id="newSlug" placeholder="auto from couple names">
-      </div>
       <button class="btn" type="button" onclick="addNewEvent(event)">Create Event</button>
     </div>
     <pre id="debugLog" style="display:none;background:#fdecec;border:1px solid #c08060;color:#8b2a2a;padding:12px;margin-top:14px;font-size:12px;white-space:pre-wrap;word-break:break-word;"></pre>
@@ -369,7 +365,6 @@
         <thead>
           <tr>
             <th>Couple</th>
-            <th>Slug</th>
             <th>Names Entered</th>
             <th>Last Update</th>
             <th>Actions</th>
@@ -384,7 +379,6 @@
       html += `
         <tr data-slug="${escapeHtml(ev.slug)}">
           <td class="couple-name">${escapeHtml(couple)}</td>
-          <td><span class="slug-mono">${escapeHtml(ev.slug)}</span></td>
           <td>${nameCount} ${nameCount === 1 ? 'person' : 'people'}</td>
           <td style="color:var(--muted)">${fmtDate(ev.updated_at)}</td>
           <td>
@@ -425,16 +419,14 @@
     const debugEl = document.getElementById('debugLog');
     debugEl.style.display = 'none';
     const couple = titleCaseName(document.getElementById('newCouple').value.trim());
-    let slug = document.getElementById('newSlug').value.trim();
-    if (!slug) slug = slugify(couple) + '-' + randomSuffix();
+    if (!couple) { toast('Enter a couple name'); return; }
+    const slug = slugify(couple) + '-' + randomSuffix();
     if (!cloudConfigured) { toast('Configure Supabase first'); return; }
     try {
       const { error } = await db.from('events').insert({ slug, couple_names: couple, data: {} });
       if (error) throw error;
       document.getElementById('newCouple').value = '';
-      document.getElementById('newSlug').value = '';
-      document.getElementById('newSlug').dataset.touched = '';
-      toast('Event created · ' + slug);
+      toast('Event created · ' + couple);
       await refreshEvents();
     } catch (err) {
       console.error('addNewEvent failed', err);
