@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Formal Photo Shot List</title>
+<style>
+  :root {
+    --ink: #2a2522;
+    --paper: #faf7f2;
+    --line: #d9d1c4;
+    --accent: #8b6b47;
+    --soft: #efe9dd;
+    --muted: #7a6f63;
+    --check: #4a6741;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--paper);
+    color: var(--ink);
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px 80px;
+  }
+  header {
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+  header h1 {
+    font-size: 28px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0 0 6px;
+    font-weight: normal;
+  }
+  header p {
+    color: var(--muted);
+    font-style: italic;
+    margin: 0;
+    font-size: 14px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+  @media (max-width: 820px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+  .panel {
+    background: white;
+    border: 1px solid var(--line);
+    padding: 22px;
+    border-radius: 2px;
+  }
+  .panel h2 {
+    font-size: 14px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 16px;
+    font-weight: normal;
+    border-bottom: 1px solid var(--soft);
+    padding-bottom: 8px;
+  }
+  .role-group {
+    margin-bottom: 18px;
+  }
+  .role-group h3 {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px;
+    font-weight: normal;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .field-row label {
+    font-size: 13px;
+    color: var(--ink);
+  }
+  input[type="text"] {
+    border: none;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    padding: 4px 0;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+  }
+  input[type="text"]:focus {
+    border-bottom-color: var(--accent);
+  }
+  .multi-input {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding: 4px 0;
+    min-height: 28px;
+  }
+  .multi-input:focus-within {
+    border-bottom-color: var(--accent);
+  }
+  .chip {
+    background: var(--soft);
+    padding: 2px 8px;
+    font-size: 13px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .chip button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .multi-input input {
+    border: none;
+    flex: 1;
+    min-width: 80px;
+    outline: none;
+    font-family: inherit;
+    font-size: 13px;
+    background: transparent;
+  }
+  .helper {
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .shot-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: shot;
+  }
+  .shot-item {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dotted var(--line);
+    align-items: flex-start;
+  }
+  .shot-item:last-child { border-bottom: none; }
+  .shot-item.disabled .shot-text { opacity: 0.35; text-decoration: line-through; }
+  .shot-check {
+    margin-top: 4px;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--check);
+    cursor: pointer;
+  }
+  .shot-num {
+    counter-increment: shot;
+    font-size: 11px;
+    color: var(--muted);
+    width: 22px;
+    flex-shrink: 0;
+    text-align: right;
+    padding-top: 3px;
+  }
+  .shot-num::before { content: counter(shot) "."; }
+  .shot-text {
+    flex: 1;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+  .shot-label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .shot-names {
+    font-weight: 500;
+  }
+  .shot-names .missing {
+    color: #c08060;
+    font-style: italic;
+    font-weight: normal;
+  }
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .btn {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 9px 18px;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .btn.secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .btn:hover { opacity: 0.85; }
+  .custom-add {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--soft);
+  }
+  .custom-add input {
+    flex: 1;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+  }
+  .custom-add button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 4px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .summary-bar {
+    background: var(--soft);
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .summary-bar strong { color: var(--ink); font-weight: 600; }
+  .remove-shot {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 4px;
+    opacity: 0.4;
+  }
+  .remove-shot:hover { opacity: 1; color: #c08060; }
+
+  /* Print view */
+  @media print {
+    body { background: white; }
+    .container { max-width: none; padding: 16px; }
+    .panel.input-panel, .actions, .custom-add, .summary-bar, .shot-check, .remove-shot { display: none !important; }
+    .layout { grid-template-columns: 1fr; }
+    .panel { border: none; padding: 0; }
+    .shot-item.disabled { display: none; }
+    .shot-item { page-break-inside: avoid; padding: 6px 0; }
+    header { margin-bottom: 16px; }
+    .shot-text { font-size: 14px; }
+  }
+
+  /* Sync indicator */
+  .sync-status {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    font-size: 10px;
+    color: var(--muted);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    padding: 5px 12px;
+    border-radius: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    z-index: 100;
+    display: none;
+    font-family: inherit;
+  }
+  .sync-status.visible { display: inline-block; }
+  .sync-status.syncing { color: var(--accent); border-color: var(--accent); }
+  .sync-status.saved { color: var(--check); border-color: var(--check); }
+  .sync-status.error { color: #c08060; border-color: #c08060; }
+  .sync-status.offline { color: var(--muted); }
+  @media print { .sync-status { display: none !important; } }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="sync-status" id="syncStatus"></div>
+<div class="container">
+  <header>
+    <h1>Formal Photo Shot List</h1>
+    <p>After the ceremony — for the photographer to call out</p>
+  </header>
+
+  <div class="layout">
+    <!-- INPUT PANEL -->
+    <div class="panel input-panel">
+      <h2>Family &amp; Wedding Party</h2>
+
+      <div class="role-group">
+        <h3>The Couple</h3>
+        <div class="field-row"><label>Bride</label><input type="text" data-key="bride" placeholder="First name"></div>
+        <div class="field-row"><label>Groom</label><input type="text" data-key="groom" placeholder="First name"></div>
+      </div>
+
+      <div class="role-group">
+        <h3>Bride's Parents</h3>
+        <div class="field-row"><label>Mother</label><input type="text" data-key="brideMom" placeholder="First name"></div>
+        <div class="field-row"><label>Father</label><input type="text" data-key="brideDad" placeholder="First name"></div>
+      </div>
+
+      <div class="role-group">
+        <h3>Groom's Parents</h3>
+        <div class="field-row"><label>Mother</label><input type="text" data-key="groomMom" placeholder="First name"></div>
+        <div class="field-row"><label>Father</label><input type="text" data-key="groomDad" placeholder="First name"></div>
+      </div>
+
+      <div class="role-group">
+        <h3>Siblings</h3>
+        <div class="field-row"><label>Bride's</label><div class="multi-input" data-multi="brideSiblings"><input type="text" placeholder="Type name + Enter"></div></div>
+        <div class="field-row"><label>Groom's</label><div class="multi-input" data-multi="groomSiblings"><input type="text" placeholder="Type name + Enter"></div></div>
+      </div>
+
+      <div class="role-group">
+        <h3>Grandparents</h3>
+        <div class="field-row"><label>Bride's</label><div class="multi-input" data-multi="brideGrandparents"><input type="text" placeholder="Type name + Enter"></div></div>
+        <div class="field-row"><label>Groom's</label><div class="multi-input" data-multi="groomGrandparents"><input type="text" placeholder="Type name + Enter"></div></div>
+      </div>
+
+      <div class="role-group">
+        <h3>Extended Family <span style="text-transform:none; font-style:italic; color:var(--muted); letter-spacing:normal;">(aunts, uncles, cousins)</span></h3>
+        <div class="field-row"><label>Bride's</label><div class="multi-input" data-multi="brideExtended"><input type="text" placeholder="Type name + Enter"></div></div>
+        <div class="field-row"><label>Groom's</label><div class="multi-input" data-multi="groomExtended"><input type="text" placeholder="Type name + Enter"></div></div>
+      </div>
+
+      <div class="role-group">
+        <h3>Wedding Party</h3>
+        <div class="field-row"><label>Bridesmaids</label><div class="multi-input" data-multi="bridesmaids"><input type="text" placeholder="Type name + Enter"></div></div>
+        <div class="field-row"><label>Groomsmen</label><div class="multi-input" data-multi="groomsmen"><input type="text" placeholder="Type name + Enter"></div></div>
+        <div class="field-row"><label>Officiant</label><input type="text" data-key="officiant" placeholder="First name"></div>
+      </div>
+
+      <p class="helper">Names save automatically in your browser.</p>
+
+      <div class="actions">
+        <button class="btn secondary" onclick="clearAll()">Clear All</button>
+      </div>
+    </div>
+
+    <!-- SHOT LIST PANEL -->
+    <div class="panel">
+      <h2>Shot List — Call These Out</h2>
+      <div class="summary-bar">
+        <span><strong id="shotCount">0</strong> shots selected</span>
+        <span id="missingNote"></span>
+      </div>
+      <ul class="shot-list" id="shotList"></ul>
+
+      <div class="custom-add">
+        <input type="text" id="customShotInput" placeholder="Add a custom shot (e.g. Bride + college roommates)">
+        <button onclick="addCustomShot()">Add</button>
+      </div>
+
+      <div class="actions">
+        <button class="btn" onclick="window.print()">Print Shot List</button>
+        <button class="btn secondary" onclick="copyShotList()">Copy as Text</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ============ State ============
+  const state = {
+    bride: '', groom: '',
+    brideMom: '', brideDad: '',
+    groomMom: '', groomDad: '',
+    officiant: '',
+    brideSiblings: [], groomSiblings: [],
+    brideGrandparents: [], groomGrandparents: [],
+    brideExtended: [], groomExtended: [],
+    bridesmaids: [], groomsmen: [],
+    disabled: {},
+    custom: [],
+  };
+
+  // ============ Cloud Config ============
+  // Paste your Supabase project URL + anon key here.
+  // Get them from: Supabase dashboard → Project Settings → API
+  const SUPABASE_URL = 'https://qhdzskmkijxfxxbsotkv.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFoZHpza21raWp4Znh4YnNvdGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NzEyMzIsImV4cCI6MjA5MjA0NzIzMn0.Rkua9orChlAIcv9zfDHfpitqWKshpP-fDKTElkkB8k4';
+
+  const params = new URLSearchParams(location.search);
+  const slug = (params.get('e') || params.get('event') || '').trim();
+  const cloudConfigured = SUPABASE_URL.startsWith('http') && !SUPABASE_URL.includes('YOUR_');
+  const cloudMode = !!slug && cloudConfigured;
+  const STORAGE_KEY = slug ? `weddingShotList_${slug}` : 'weddingShotList_v1';
+
+  let supabase = null;
+  let saveTimer = null;
+  let lastRemotePayload = null;
+  let isApplyingRemote = false;
+
+  function setStatus(msg, kind) {
+    const el = document.getElementById('syncStatus');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = 'sync-status visible' + (kind ? ' ' + kind : '');
+  }
+
+  function loadLocal() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) Object.assign(state, JSON.parse(saved));
+    } catch (e) {}
+  }
+  function saveLocal() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  async function loadCloud() {
+    setStatus('Loading…', 'syncing');
+    try {
+      const { data, error } = await supabase
+        .from('events').select('data, couple_names').eq('slug', slug).maybeSingle();
+      if (error) throw error;
+      if (data && data.data && Object.keys(data.data).length) {
+        Object.assign(state, data.data);
+        lastRemotePayload = JSON.stringify(data.data);
+      } else if (!data) {
+        // First-time event — create the row
+        await supabase.from('events').insert({ slug, data: {} });
+      }
+      const who = data && data.couple_names ? data.couple_names : slug;
+      setStatus(`Synced · ${who}`, 'saved');
+      return true;
+    } catch (e) {
+      console.error('Cloud load failed:', e);
+      setStatus('Offline — using local copy', 'offline');
+      loadLocal();
+      return false;
+    }
+  }
+
+  function scheduleCloudSave() {
+    if (!cloudMode || isApplyingRemote) return;
+    clearTimeout(saveTimer);
+    setStatus('Saving…', 'syncing');
+    saveTimer = setTimeout(async () => {
+      try {
+        const payload = JSON.parse(JSON.stringify(state));
+        const { error } = await supabase
+          .from('events')
+          .update({ data: payload, updated_at: new Date().toISOString() })
+          .eq('slug', slug);
+        if (error) throw error;
+        lastRemotePayload = JSON.stringify(payload);
+        setStatus(`Saved · ${slug}`, 'saved');
+      } catch (e) {
+        console.error('Cloud save failed:', e);
+        setStatus('Save failed — retrying', 'error');
+        setTimeout(scheduleCloudSave, 3000);
+      }
+    }, 800);
+  }
+
+  function subscribeRealtime() {
+    if (!cloudMode) return;
+    supabase.channel(`event-${slug}`)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'events', filter: `slug=eq.${slug}` },
+        (payload) => {
+          const incoming = JSON.stringify(payload.new.data);
+          if (incoming === lastRemotePayload) return;
+          lastRemotePayload = incoming;
+          isApplyingRemote = true;
+          const blanks = {
+            bride:'', groom:'', brideMom:'', brideDad:'', groomMom:'', groomDad:'', officiant:'',
+            brideSiblings:[], groomSiblings:[], brideGrandparents:[], groomGrandparents:[],
+            brideExtended:[], groomExtended:[], bridesmaids:[], groomsmen:[], disabled:{}, custom:[]
+          };
+          Object.assign(state, blanks, payload.new.data);
+          saveLocal();
+          renderInputs();
+          renderShots();
+          isApplyingRemote = false;
+          setStatus(`Updated · ${slug}`, 'saved');
+        }
+      ).subscribe();
+  }
+
+  function loadState() { loadLocal(); }
+  function saveState() {
+    if (isApplyingRemote) return;
+    saveLocal();
+    scheduleCloudSave();
+  }
+
+  // ============ Helpers ============
+  const NAME = (val, fallback) => val && val.trim() ? val.trim() : `<span class="missing">[${fallback}]</span>`;
+  const LIST = (arr, fallback) => {
+    if (!arr.length) return `<span class="missing">[${fallback}]</span>`;
+    return arr.join(' &amp; ');
+  };
+  const ALL = (...parts) => parts.filter(Boolean).join(' + ');
+
+  // ============ Shot Definitions ============
+  function buildShots() {
+    const s = state;
+    const bride = NAME(s.bride, 'Bride');
+    const groom = NAME(s.groom, 'Groom');
+    const couple = `${bride} + ${groom}`;
+    const brideParents = `${NAME(s.brideMom, "Bride's Mom")} + ${NAME(s.brideDad, "Bride's Dad")}`;
+    const groomParents = `${NAME(s.groomMom, "Groom's Mom")} + ${NAME(s.groomDad, "Groom's Dad")}`;
+
+    const shots = [
+      { id: 'a1',  label: 'The Couple',              text: `${couple}` },
+      { id: 'a2',  label: 'Both Families',           text: `${couple} + ${brideParents} + ${groomParents}` },
+      { id: 'b1',  label: "Bride's Parents",         text: `${couple} + ${brideParents}` },
+      { id: 'b2',  label: 'Bride with Mom',          text: `${bride} + ${NAME(s.brideMom, "Bride's Mom")}` },
+      { id: 'b3',  label: 'Bride with Dad',          text: `${bride} + ${NAME(s.brideDad, "Bride's Dad")}` },
+      { id: 'b4',  label: 'Bride with Both Parents', text: `${bride} + ${brideParents}` },
+      { id: 'c1',  label: "Groom's Parents",         text: `${couple} + ${groomParents}` },
+      { id: 'c2',  label: 'Groom with Mom',          text: `${groom} + ${NAME(s.groomMom, "Groom's Mom")}` },
+      { id: 'c3',  label: 'Groom with Dad',          text: `${groom} + ${NAME(s.groomDad, "Groom's Dad")}` },
+      { id: 'c4',  label: 'Groom with Both Parents', text: `${groom} + ${groomParents}` },
+      { id: 'd1',  label: "Bride's Immediate Family", text: `${couple} + ${brideParents} + ${LIST(s.brideSiblings, "Bride's siblings")}` },
+      { id: 'd2',  label: 'Bride with Siblings',     text: `${bride} + ${LIST(s.brideSiblings, "Bride's siblings")}` },
+      { id: 'e1',  label: "Groom's Immediate Family", text: `${couple} + ${groomParents} + ${LIST(s.groomSiblings, "Groom's siblings")}` },
+      { id: 'e2',  label: 'Groom with Siblings',     text: `${groom} + ${LIST(s.groomSiblings, "Groom's siblings")}` },
+      { id: 'f1',  label: 'All Siblings Together',   text: `${couple} + ${LIST([...s.brideSiblings, ...s.groomSiblings], 'all siblings')}` },
+      { id: 'g1',  label: "Bride's Grandparents",    text: `${couple} + ${LIST(s.brideGrandparents, "Bride's grandparents")}` },
+      { id: 'g2',  label: "Groom's Grandparents",    text: `${couple} + ${LIST(s.groomGrandparents, "Groom's grandparents")}` },
+      { id: 'g3',  label: "Bride's Extended Family", text: `${couple} + ${brideParents} + ${LIST(s.brideSiblings, "Bride's siblings")} + ${LIST(s.brideExtended, "Bride's extended family")}` },
+      { id: 'g4',  label: "Groom's Extended Family", text: `${couple} + ${groomParents} + ${LIST(s.groomSiblings, "Groom's siblings")} + ${LIST(s.groomExtended, "Groom's extended family")}` },
+      { id: 'h1',  label: 'Full Wedding Party',      text: `${couple} + ${LIST(s.bridesmaids, 'bridesmaids')} + ${LIST(s.groomsmen, 'groomsmen')}` },
+      { id: 'h2',  label: 'Bride + Bridesmaids',     text: `${bride} + ${LIST(s.bridesmaids, 'bridesmaids')}` },
+      { id: 'h3',  label: 'Groom + Groomsmen',       text: `${groom} + ${LIST(s.groomsmen, 'groomsmen')}` },
+      { id: 'i1',  label: 'With the Officiant',      text: `${couple} + ${NAME(s.officiant, 'Officiant')}` },
+    ];
+
+    // Append custom shots
+    s.custom.forEach((c, i) => shots.push({ id: 'custom_' + i, label: 'Custom', text: c, custom: true, customIndex: i }));
+
+    return shots;
+  }
+
+  // ============ Render ============
+  function renderInputs() {
+    document.querySelectorAll('input[data-key]').forEach(input => {
+      const key = input.dataset.key;
+      input.value = state[key] || '';
+    });
+    document.querySelectorAll('[data-multi]').forEach(container => {
+      renderMulti(container);
+    });
+  }
+
+  function renderMulti(container) {
+    const key = container.dataset.multi;
+    const values = state[key] || [];
+    // Clear all chips
+    container.querySelectorAll('.chip').forEach(c => c.remove());
+    const input = container.querySelector('input');
+    values.forEach(name => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = `${name}<button title="Remove">×</button>`;
+      chip.querySelector('button').onclick = () => {
+        state[key] = state[key].filter(n => n !== name);
+        saveState();
+        renderMulti(container);
+        renderShots();
+      };
+      container.insertBefore(chip, input);
+    });
+  }
+
+  function renderShots() {
+    const shots = buildShots();
+    const ul = document.getElementById('shotList');
+    ul.innerHTML = '';
+    let activeCount = 0;
+    shots.forEach(shot => {
+      const isDisabled = !!state.disabled[shot.id];
+      if (!isDisabled) activeCount++;
+      const li = document.createElement('li');
+      li.className = 'shot-item' + (isDisabled ? ' disabled' : '');
+      li.innerHTML = `
+        <input type="checkbox" class="shot-check" ${!isDisabled ? 'checked' : ''}>
+        <span class="shot-num"></span>
+        <div class="shot-text">
+          <span class="shot-label">${shot.label}</span>
+          <span class="shot-names">${shot.text}</span>
+        </div>
+        ${shot.custom ? '<button class="remove-shot" title="Remove">×</button>' : ''}
+      `;
+      li.querySelector('.shot-check').onchange = (e) => {
+        if (e.target.checked) delete state.disabled[shot.id];
+        else state.disabled[shot.id] = true;
+        saveState();
+        renderShots();
+      };
+      if (shot.custom) {
+        li.querySelector('.remove-shot').onclick = () => {
+          state.custom.splice(shot.customIndex, 1);
+          saveState();
+          renderShots();
+        };
+      }
+      ul.appendChild(li);
+    });
+    document.getElementById('shotCount').textContent = activeCount;
+    // Missing-names warning
+    const hasMissing = ul.querySelector('.missing');
+    document.getElementById('missingNote').innerHTML = hasMissing
+      ? '<em style="color:#c08060">Fill in names above to complete</em>'
+      : '<em>All names filled in ✓</em>';
+  }
+
+  // ============ Event wiring ============
+  document.querySelectorAll('input[data-key]').forEach(input => {
+    input.addEventListener('input', () => {
+      state[input.dataset.key] = input.value;
+      saveState();
+      renderShots();
+    });
+  });
+
+  document.querySelectorAll('[data-multi]').forEach(container => {
+    const key = container.dataset.multi;
+    if (!state[key]) state[key] = [];
+    const input = container.querySelector('input');
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        const val = input.value.trim().replace(/,$/, '');
+        if (val && !state[key].includes(val)) {
+          state[key].push(val);
+          input.value = '';
+          saveState();
+          renderMulti(container);
+          renderShots();
+        }
+      } else if (e.key === 'Backspace' && !input.value && state[key].length) {
+        state[key].pop();
+        saveState();
+        renderMulti(container);
+        renderShots();
+      }
+    });
+    input.addEventListener('blur', () => {
+      const val = input.value.trim();
+      if (val && !state[key].includes(val)) {
+        state[key].push(val);
+        input.value = '';
+        saveState();
+        renderMulti(container);
+        renderShots();
+      }
+    });
+  });
+
+  function addCustomShot() {
+    const input = document.getElementById('customShotInput');
+    const val = input.value.trim();
+    if (val) {
+      state.custom.push(val);
+      input.value = '';
+      saveState();
+      renderShots();
+    }
+  }
+  document.getElementById('customShotInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addCustomShot(); }
+  });
+
+  async function clearAll() {
+    if (!confirm('Clear all names and reset the shot list?')) return;
+    if (cloudMode) {
+      try {
+        isApplyingRemote = true;
+        await supabase.from('events').update({ data: {} }).eq('slug', slug);
+      } catch (e) { console.error(e); }
+      isApplyingRemote = false;
+    }
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+
+  function copyShotList() {
+    const shots = buildShots().filter(s => !state.disabled[s.id]);
+    const lines = shots.map((s, i) => {
+      const plain = s.text.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&');
+      return `${i + 1}. ${s.label}: ${plain}`;
+    });
+    const text = 'WEDDING FORMAL PHOTO SHOT LIST\n\n' + lines.join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Shot list copied to clipboard!');
+    });
+  }
+
+  // ============ Init ============
+  (async function init() {
+    if (cloudMode) {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      await loadCloud();
+      subscribeRealtime();
+    } else {
+      loadLocal();
+      if (slug && !cloudConfigured) {
+        setStatus('Local only — Supabase not configured', 'offline');
+      } else if (!slug) {
+        // No event slug — solo mode, no indicator needed
+      }
+    }
+    renderInputs();
+    renderShots();
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shot List Admin · All Events</title>
+<style>
+  :root {
+    --ink: #2a2522;
+    --paper: #faf7f2;
+    --line: #d9d1c4;
+    --accent: #8b6b47;
+    --soft: #efe9dd;
+    --muted: #7a6f63;
+    --check: #4a6741;
+    --warn: #c08060;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background: var(--paper);
+    color: var(--ink);
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+  }
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+  header {
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 22px;
+    margin-bottom: 32px;
+  }
+  header h1 {
+    font-size: 28px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0 0 6px;
+    font-weight: normal;
+  }
+  header p { color: var(--muted); font-style: italic; margin: 0; font-size: 14px; }
+
+  .panel {
+    background: white;
+    border: 1px solid var(--line);
+    padding: 24px;
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+  .panel h2 {
+    font-size: 14px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 18px;
+    font-weight: normal;
+    border-bottom: 1px solid var(--soft);
+    padding-bottom: 10px;
+  }
+
+  .new-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+  @media (max-width: 640px) { .new-form { grid-template-columns: 1fr; } }
+  .field label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .field input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    background: transparent;
+    padding: 6px 0;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    outline: none;
+  }
+  .field input:focus { border-bottom-color: var(--accent); }
+  .btn {
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    padding: 10px 22px;
+    font-family: inherit;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+  .btn:hover { opacity: 0.85; }
+  .btn.danger { background: transparent; color: var(--warn); border: 1px solid var(--warn); padding: 4px 10px; font-size: 10px; }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 6px 14px; font-size: 11px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: normal;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  td {
+    padding: 12px 10px;
+    border-bottom: 1px dotted var(--line);
+    font-size: 14px;
+    vertical-align: middle;
+  }
+  tr:hover td { background: var(--soft); }
+  .couple-name { font-weight: 600; }
+  .slug-mono {
+    font-family: 'SF Mono', 'Monaco', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    background: var(--soft);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+  .link-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .link-actions a {
+    color: var(--accent);
+    font-size: 12px;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+  .link-actions a:hover { border-bottom-color: var(--accent); }
+  .empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--muted);
+    font-style: italic;
+  }
+  .gate {
+    max-width: 380px;
+    margin: 120px auto;
+    text-align: center;
+  }
+  .gate h2 { font-size: 18px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: normal; }
+  .gate input { width: 100%; margin: 16px 0; text-align: center; }
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 13px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .toast.visible { opacity: 1; }
+  .config-warning {
+    background: #fff4e6;
+    border: 1px solid var(--warn);
+    color: var(--warn);
+    padding: 14px;
+    border-radius: 3px;
+    margin-bottom: 24px;
+    font-size: 13px;
+  }
+  .config-warning code { background: rgba(0,0,0,0.06); padding: 2px 5px; border-radius: 2px; font-size: 12px; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- Passphrase gate -->
+<div id="gate" class="gate" style="display:none">
+  <h2>Admin Access</h2>
+  <p style="color:var(--muted); font-size:13px;">Enter passphrase to manage events.</p>
+  <input type="password" id="gatePass" placeholder="Passphrase" autofocus>
+  <button class="btn" onclick="checkGate()">Enter</button>
+  <p id="gateError" style="color:var(--warn); font-size:12px; margin-top:10px; display:none;">Incorrect passphrase.</p>
+</div>
+
+<div id="app" class="container" style="display:none">
+  <header>
+    <h1>Shot List Events</h1>
+    <p>Manage couples &amp; their formal photo lists</p>
+  </header>
+
+  <div id="configWarning" class="config-warning" style="display:none">
+    <strong>Supabase not configured.</strong> Paste your project URL and anon key at the top of the <code>&lt;script&gt;</code> block in <code>admin.html</code> and <code>wedding-shot-list.html</code>. See <code>SETUP.md</code>.
+  </div>
+
+  <div class="panel">
+    <h2>Add New Event</h2>
+    <form class="new-form" onsubmit="createEvent(event)">
+      <div class="field">
+        <label>Couple Names</label>
+        <input type="text" id="newCouple" placeholder="e.g. Maria & David Bueso" required>
+      </div>
+      <div class="field">
+        <label>Slug <span style="text-transform:none;color:var(--muted);font-style:italic">(URL key, auto-generated)</span></label>
+        <input type="text" id="newSlug" placeholder="auto from couple names">
+      </div>
+      <button class="btn" type="submit">Create Event</button>
+    </form>
+  </div>
+
+  <div class="panel">
+    <h2>All Events</h2>
+    <div id="eventsContainer">
+      <p class="empty">Loading…</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ============ Config ============
+  // Paste the same Supabase project URL + anon key here as in wedding-shot-list.html
+  const SUPABASE_URL = 'https://qhdzskmkijxfxxbsotkv.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFoZHpza21raWp4Znh4YnNvdGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NzEyMzIsImV4cCI6MjA5MjA0NzIzMn0.Rkua9orChlAIcv9zfDHfpitqWKshpP-fDKTElkkB8k4';
+
+  // Soft passphrase gate — not real security, just keeps the URL from being usable by anyone who stumbles on it.
+  // Change this to whatever you want.
+  const ADMIN_PASSPHRASE = 'changeme';
+
+  // Where shot-list.html lives, relative to admin.html.
+  // If you serve them at /shotlist.html and /admin.html, this is fine.
+  const SHOTLIST_PATH = 'wedding-shot-list.html';
+
+  const cloudConfigured = SUPABASE_URL.startsWith('http') && !SUPABASE_URL.includes('YOUR_');
+  let supabase = null;
+
+  // ============ Passphrase Gate ============
+  function checkGate() {
+    const val = document.getElementById('gatePass').value;
+    if (val === ADMIN_PASSPHRASE) {
+      sessionStorage.setItem('shotlist_admin', '1');
+      showApp();
+    } else {
+      document.getElementById('gateError').style.display = 'block';
+    }
+  }
+  function showApp() {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    init();
+  }
+  document.getElementById('gatePass').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkGate();
+  });
+
+  // Auto-let-in if already authed this session
+  if (sessionStorage.getItem('shotlist_admin') === '1') {
+    showApp();
+  } else {
+    document.getElementById('gate').style.display = 'block';
+  }
+
+  // ============ Helpers ============
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2200);
+  }
+
+  function slugify(s) {
+    return s.toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 40);
+  }
+
+  function randomSuffix() {
+    return Math.random().toString(36).slice(2, 6);
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = (now - d) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+    return d.toLocaleDateString();
+  }
+
+  function eventUrl(slug) {
+    const base = location.href.replace(/admin\.html.*$/, '');
+    return base + SHOTLIST_PATH + '?e=' + encodeURIComponent(slug);
+  }
+
+  // Auto-fill slug from couple name
+  document.getElementById('newCouple').addEventListener('input', (e) => {
+    const slugInput = document.getElementById('newSlug');
+    if (!slugInput.dataset.touched) {
+      slugInput.value = slugify(e.target.value) + '-' + randomSuffix();
+    }
+  });
+  document.getElementById('newSlug').addEventListener('input', (e) => {
+    e.target.dataset.touched = '1';
+  });
+
+  // ============ Data ============
+  async function init() {
+    if (!cloudConfigured) {
+      document.getElementById('configWarning').style.display = 'block';
+      document.getElementById('eventsContainer').innerHTML = '<p class="empty">Configure Supabase to load events.</p>';
+      return;
+    }
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    await refreshEvents();
+  }
+
+  async function refreshEvents() {
+    const container = document.getElementById('eventsContainer');
+    container.innerHTML = '<p class="empty">Loading…</p>';
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('slug, couple_names, data, updated_at, created_at')
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      renderEvents(data || []);
+    } catch (e) {
+      console.error(e);
+      container.innerHTML = `<p class="empty" style="color:var(--warn)">Error loading events: ${e.message}</p>`;
+    }
+  }
+
+  function renderEvents(events) {
+    const container = document.getElementById('eventsContainer');
+    if (!events.length) {
+      container.innerHTML = '<p class="empty">No events yet — add one above.</p>';
+      return;
+    }
+    let html = `
+      <table>
+        <thead>
+          <tr>
+            <th>Couple</th>
+            <th>Slug</th>
+            <th>Names Entered</th>
+            <th>Last Update</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>`;
+    for (const ev of events) {
+      const d = ev.data || {};
+      const named = [d.bride, d.groom].filter(Boolean).join(' & ') || '—';
+      const couple = ev.couple_names || named;
+      const nameCount = countNames(d);
+      html += `
+        <tr>
+          <td class="couple-name">${escapeHtml(couple)}</td>
+          <td><span class="slug-mono">${escapeHtml(ev.slug)}</span></td>
+          <td>${nameCount} ${nameCount === 1 ? 'person' : 'people'}</td>
+          <td style="color:var(--muted)">${fmtDate(ev.updated_at)}</td>
+          <td>
+            <div class="link-actions">
+              <a href="${eventUrl(ev.slug)}" target="_blank">Open</a>
+              <a href="#" onclick="copyLink('${escapeHtml(ev.slug)}'); return false;">Copy link</a>
+              <a href="#" onclick="deleteEvent('${escapeHtml(ev.slug)}'); return false;" style="color:var(--warn)">Delete</a>
+            </div>
+          </td>
+        </tr>`;
+    }
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function countNames(d) {
+    let n = 0;
+    ['bride','groom','brideMom','brideDad','groomMom','groomDad','officiant'].forEach(k => { if (d[k]) n++; });
+    ['brideSiblings','groomSiblings','brideGrandparents','groomGrandparents',
+     'brideExtended','groomExtended','bridesmaids','groomsmen'].forEach(k => {
+      if (Array.isArray(d[k])) n += d[k].length;
+    });
+    return n;
+  }
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  async function createEvent(e) {
+    e.preventDefault();
+    const couple = document.getElementById('newCouple').value.trim();
+    let slug = document.getElementById('newSlug').value.trim();
+    if (!slug) slug = slugify(couple) + '-' + randomSuffix();
+    if (!cloudConfigured) { toast('Configure Supabase first'); return; }
+    try {
+      const { error } = await supabase.from('events').insert({ slug, couple_names: couple, data: {} });
+      if (error) throw error;
+      document.getElementById('newCouple').value = '';
+      document.getElementById('newSlug').value = '';
+      document.getElementById('newSlug').dataset.touched = '';
+      toast('Event created · ' + slug);
+      await refreshEvents();
+    } catch (err) {
+      console.error(err);
+      toast('Error: ' + err.message);
+    }
+  }
+
+  async function copyLink(slug) {
+    const url = eventUrl(slug);
+    try {
+      await navigator.clipboard.writeText(url);
+      toast('Link copied');
+    } catch (e) {
+      prompt('Copy this link:', url);
+    }
+  }
+
+  async function deleteEvent(slug) {
+    if (!confirm(`Delete event "${slug}"? This cannot be undone.`)) return;
+    try {
+      const { error } = await supabase.from('events').delete().eq('slug', slug);
+      if (error) throw error;
+      toast('Deleted · ' + slug);
+      await refreshEvents();
+    } catch (err) {
+      toast('Error: ' + err.message);
+    }
+  }
+</script>
+</body>
+</html>
