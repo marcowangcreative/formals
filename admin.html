@@ -371,7 +371,7 @@
       const couple = ev.couple_names || named;
       const nameCount = countNames(d);
       html += `
-        <tr>
+        <tr data-slug="${escapeHtml(ev.slug)}">
           <td class="couple-name">${escapeHtml(couple)}</td>
           <td><span class="slug-mono">${escapeHtml(ev.slug)}</span></td>
           <td>${nameCount} ${nameCount === 1 ? 'person' : 'people'}</td>
@@ -380,6 +380,7 @@
             <div class="link-actions">
               <a href="${eventUrl(ev.slug)}" target="_blank">Open</a>
               <a href="#" onclick="copyLink('${escapeHtml(ev.slug)}'); return false;">Copy link</a>
+              <a href="#" onclick="renameEvent('${escapeHtml(ev.slug)}'); return false;">Rename</a>
               <a href="#" onclick="deleteEvent('${escapeHtml(ev.slug)}'); return false;" style="color:var(--warn)">Delete</a>
             </div>
           </td>
@@ -439,6 +440,25 @@
       toast('Link copied');
     } catch (e) {
       prompt('Copy this link:', url);
+    }
+  }
+
+  async function renameEvent(slug) {
+    const row = document.querySelector(`tr[data-slug="${slug}"]`);
+    const current = row ? row.querySelector('.couple-name').textContent : '';
+    const updated = prompt('New couple name:', current);
+    if (updated === null) return;
+    const trimmed = updated.trim();
+    if (!trimmed) { toast('Name cannot be empty'); return; }
+    if (trimmed === current) return;
+    try {
+      const { error } = await db.from('events').update({ couple_names: trimmed }).eq('slug', slug);
+      if (error) throw error;
+      toast('Renamed · ' + slug);
+      await refreshEvents();
+    } catch (err) {
+      console.error('renameEvent failed', err);
+      toast('Error: ' + (err.message || 'rename failed'));
     }
   }
 
