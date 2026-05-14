@@ -291,19 +291,22 @@
     color: var(--ink);
     border-radius: 2px;
   }
-  .move-btns { display: inline-flex; flex-direction: column; gap: 1px; margin-right: 4px; }
-  .move-btn {
-    background: none;
-    border: 1px solid var(--line);
+  .drag-handle {
+    cursor: grab;
     color: var(--muted);
-    cursor: pointer;
-    font-size: 11px;
+    font-size: 18px;
     line-height: 1;
-    padding: 1px 5px;
-    border-radius: 2px;
+    padding: 0 8px;
+    user-select: none;
+    touch-action: none;
+    opacity: 0.55;
   }
-  .move-btn:hover { color: var(--ink); border-color: var(--accent); }
-  .move-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .drag-handle:hover { color: var(--accent); opacity: 1; }
+  .drag-handle:active { cursor: grabbing; }
+  .shot-item.is-draggable { background: rgba(139, 107, 71, 0.04); }
+  .sortable-ghost { opacity: 0.35; background: var(--soft); }
+  .sortable-chosen { background: white; }
+  .sortable-drag { background: white !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 2px; }
   .shot-count-badge {
     margin-left: 8px;
     color: var(--muted);
@@ -316,7 +319,7 @@
   @media print {
     body { background: white; }
     .container { max-width: none; padding: 16px; }
-    .panel.input-panel, .actions, .custom-add, .summary-bar, .shot-check, .remove-shot, .sort-bar, .move-btns { display: none !important; }
+    .panel.input-panel, .actions, .custom-add, .summary-bar, .shot-check, .remove-shot, .sort-bar, .drag-handle { display: none !important; }
     .layout { grid-template-columns: 1fr; }
     .panel { border: none; padding: 0; }
     .shot-item.disabled { display: none; }
@@ -350,6 +353,7 @@
   @media print { .sync-status { display: none !important; } }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 </head>
 <body>
 <div class="sync-status" id="syncStatus"></div>
@@ -607,20 +611,25 @@
     return shots;
   }
 
-  function moveShot(id, delta) {
-    const shots = buildShots();
-    let order = (state.customOrder && state.customOrder.length)
-      ? state.customOrder.slice()
-      : getOrderedShots().map(s => s.id);
-    shots.forEach(s => { if (!order.includes(s.id)) order.push(s.id); });
-    order = order.filter(id => shots.some(s => s.id === id));
-    const idx = order.indexOf(id);
-    const newIdx = idx + delta;
-    if (idx === -1 || newIdx < 0 || newIdx >= order.length) return;
-    [order[idx], order[newIdx]] = [order[newIdx], order[idx]];
-    state.customOrder = order;
-    saveState();
-    renderShots();
+  let sortableInstance = null;
+  function applyDragSort() {
+    if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
+    if ((state.sortMode || 'default') !== 'custom') return;
+    if (typeof Sortable === 'undefined') return;
+    const ul = document.getElementById('shotList');
+    sortableInstance = Sortable.create(ul, {
+      handle: '.drag-handle',
+      animation: 150,
+      ghostClass: 'sortable-ghost',
+      chosenClass: 'sortable-chosen',
+      dragClass: 'sortable-drag',
+      onEnd: () => {
+        const newOrder = Array.from(ul.querySelectorAll('.shot-item')).map(li => li.dataset.shotId);
+        state.customOrder = newOrder;
+        saveState();
+        setStatus('Order saved ✓', 'ok');
+      },
+    });
   }
 
   // ============ Shot Definitions ============
@@ -705,18 +714,16 @@
       const isDisabled = !!state.disabled[shot.id];
       if (!isDisabled) activeCount++;
       const li = document.createElement('li');
-      li.className = 'shot-item' + (isDisabled ? ' disabled' : '');
-      const moveBtns = isCustom
-        ? `<span class="move-btns">
-             <button class="move-btn move-up" title="Move up" ${i === 0 ? 'disabled' : ''}>↑</button>
-             <button class="move-btn move-down" title="Move down" ${i === shots.length - 1 ? 'disabled' : ''}>↓</button>
-           </span>`
+      li.className = 'shot-item' + (isDisabled ? ' disabled' : '') + (isCustom ? ' is-draggable' : '');
+      li.dataset.shotId = shot.id;
+      const dragHandle = isCustom
+        ? `<span class="drag-handle" title="Drag to reorder">⋮⋮</span>`
         : '';
       const sizeBadge = (state.sortMode === 'largest' || state.sortMode === 'smallest')
         ? `<span class="shot-count-badge">(${shot.count})</span>` : '';
       li.innerHTML = `
         <input type="checkbox" class="shot-check" ${!isDisabled ? 'checked' : ''}>
-        ${moveBtns}
+        ${dragHandle}
         <span class="shot-num"></span>
         <div class="shot-text">
           <span class="shot-label">${shot.label}${sizeBadge}</span>
@@ -730,10 +737,6 @@
         saveState();
         renderShots();
       };
-      if (isCustom) {
-        li.querySelector('.move-up').onclick = () => moveShot(shot.id, -1);
-        li.querySelector('.move-down').onclick = () => moveShot(shot.id, 1);
-      }
       if (shot.custom) {
         li.querySelector('.remove-shot').onclick = () => {
           state.custom.splice(shot.customIndex, 1);
@@ -747,6 +750,7 @@
     if (sortSelect && sortSelect.value !== (state.sortMode || 'default')) {
       sortSelect.value = state.sortMode || 'default';
     }
+    applyDragSort();
     document.getElementById('shotCount').textContent = activeCount;
     // Missing-names warning
     const hasMissing = ul.querySelector('.missing');
