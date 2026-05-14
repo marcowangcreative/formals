@@ -65,7 +65,7 @@
 
   .new-form {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1.4fr 0.8fr auto;
     gap: 18px;
     align-items: end;
   }
@@ -152,6 +152,19 @@
   .link-actions a:hover { background: var(--soft); }
   .link-actions a.danger-action { color: var(--warn); }
   .link-actions a.danger-action:hover { background: rgba(192, 128, 96, 0.1); }
+  .row-date {
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 4px 6px;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--ink);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  .row-date:hover { border-color: var(--line); background: var(--paper); }
+  .row-date:focus { border-color: var(--accent); background: white; }
   .empty {
     text-align: center;
     padding: 40px;
@@ -220,6 +233,10 @@
       <div class="field">
         <label>Couple Names</label>
         <input type="text" id="newCouple" placeholder="e.g. Maria & David Bueso" autocapitalize="words" required>
+      </div>
+      <div class="field">
+        <label>Event Date</label>
+        <input type="date" id="newDate">
       </div>
       <button class="btn" type="button" onclick="addNewEvent(event)">Create Event</button>
     </div>
@@ -395,10 +412,8 @@
       const named = [d.bride, d.groom].filter(Boolean).join(' & ') || '—';
       const couple = ev.couple_names || named;
       const nameCount = countNames(d);
-      const dateDisplay = fmtEventDate(d.eventDate);
-      const dateCell = dateDisplay
-        ? `<span>${escapeHtml(dateDisplay)}</span>`
-        : `<span style="color:var(--muted); font-style:italic;">—</span>`;
+      const dateValue = d.eventDate || '';
+      const dateCell = `<input type="date" class="row-date" value="${escapeHtml(dateValue)}" onchange="updateEventDate('${escapeHtml(ev.slug)}', this.value)">`;
       html += `
         <tr data-slug="${escapeHtml(ev.slug)}">
           <td class="couple-name">${escapeHtml(couple)}</td>
@@ -444,12 +459,14 @@
     debugEl.style.display = 'none';
     const couple = titleCaseName(document.getElementById('newCouple').value.trim());
     if (!couple) { toast('Enter a couple name'); return; }
+    const eventDate = document.getElementById('newDate').value || '';
     const slug = slugify(couple) + '-' + randomSuffix();
     if (!cloudConfigured) { toast('Configure Supabase first'); return; }
     try {
-      const { error } = await db.from('events').insert({ slug, couple_names: couple, data: {} });
+      const { error } = await db.from('events').insert({ slug, couple_names: couple, data: { eventDate } });
       if (error) throw error;
       document.getElementById('newCouple').value = '';
+      document.getElementById('newDate').value = '';
       toast('Event created · ' + couple);
       await refreshEvents();
     } catch (err) {
@@ -471,6 +488,21 @@
       toast('Link copied');
     } catch (e) {
       prompt('Copy this link:', url);
+    }
+  }
+
+  async function updateEventDate(slug, dateValue) {
+    try {
+      const { data, error: readErr } = await db.from('events').select('data').eq('slug', slug).single();
+      if (readErr) throw readErr;
+      const merged = Object.assign({}, data && data.data ? data.data : {}, { eventDate: dateValue || '' });
+      const { error } = await db.from('events').update({ data: merged, updated_at: new Date().toISOString() }).eq('slug', slug);
+      if (error) throw error;
+      toast(dateValue ? 'Date saved' : 'Date cleared');
+      await refreshEvents();
+    } catch (err) {
+      console.error('updateEventDate failed', err);
+      toast('Error: ' + (err.message || 'date update failed'));
     }
   }
 
