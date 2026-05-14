@@ -214,7 +214,7 @@
         <label>Slug <span style="text-transform:none;color:var(--muted);font-style:italic">(URL key, auto-generated)</span></label>
         <input type="text" id="newSlug" placeholder="auto from couple names">
       </div>
-      <button class="btn" type="button" onclick="createEvent(event)">Create Event</button>
+      <button class="btn" type="button" onclick="addNewEvent(event)">Create Event</button>
     </div>
     <pre id="debugLog" style="display:none;background:#fdecec;border:1px solid #c08060;color:#8b2a2a;padding:12px;margin-top:14px;font-size:12px;white-space:pre-wrap;word-break:break-word;"></pre>
   </div>
@@ -404,7 +404,7 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  async function createEvent(e) {
+  async function addNewEvent(e) {
     if (e && e.preventDefault) e.preventDefault();
     const debugEl = document.getElementById('debugLog');
     debugEl.style.display = 'none';
@@ -421,7 +421,7 @@
       toast('Event created · ' + slug);
       await refreshEvents();
     } catch (err) {
-      console.error('createEvent failed', err);
+      console.error('addNewEvent failed', err);
       debugEl.textContent = 'CREATE EVENT FAILED\n\n'
         + 'message: ' + (err.message || '(none)') + '\n'
         + 'code: ' + (err.code || '(none)') + '\n'
