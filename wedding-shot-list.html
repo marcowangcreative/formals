@@ -595,20 +595,23 @@
     const shots = buildShots();
     shots.forEach(s => { s.count = shotSize(s.text); });
     const mode = state.sortMode || 'default';
+    let sorted;
     if (mode === 'largest') {
-      return shots.slice().sort((a, b) => b.count - a.count);
-    }
-    if (mode === 'smallest') {
-      return shots.slice().sort((a, b) => a.count - b.count);
-    }
-    if (mode === 'custom') {
+      sorted = shots.slice().sort((a, b) => b.count - a.count);
+    } else if (mode === 'smallest') {
+      sorted = shots.slice().sort((a, b) => a.count - b.count);
+    } else if (mode === 'custom') {
       let order = (state.customOrder || []).slice();
       shots.forEach(s => { if (!order.includes(s.id)) order.push(s.id); });
       order = order.filter(id => shots.some(s => s.id === id));
       const rank = id => { const i = order.indexOf(id); return i === -1 ? Infinity : i; };
-      return shots.slice().sort((a, b) => rank(a.id) - rank(b.id));
+      sorted = shots.slice().sort((a, b) => rank(a.id) - rank(b.id));
+    } else {
+      sorted = shots;
     }
-    return shots;
+    const enabled = sorted.filter(s => !state.disabled[s.id]);
+    const disabled = sorted.filter(s => state.disabled[s.id]);
+    return [...enabled, ...disabled];
   }
 
   let sortableInstance = null;
