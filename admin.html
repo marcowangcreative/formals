@@ -333,17 +333,6 @@
     return base + SHOTLIST_PATH + '?e=' + encodeURIComponent(slug);
   }
 
-  // Auto-fill slug from couple name
-  document.getElementById('newCouple').addEventListener('input', (e) => {
-    const slugInput = document.getElementById('newSlug');
-    if (!slugInput.dataset.touched) {
-      slugInput.value = slugify(e.target.value) + '-' + randomSuffix();
-    }
-  });
-  document.getElementById('newSlug').addEventListener('input', (e) => {
-    e.target.dataset.touched = '1';
-  });
-
   // ============ Data ============
   async function init() {
     if (!cloudConfigured) {

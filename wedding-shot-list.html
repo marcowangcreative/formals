@@ -441,6 +441,8 @@
         <label for="sortMode">Order:</label>
         <select id="sortMode">
           <option value="default">Default (ceremony flow)</option>
+          <option value="efficient">Efficient (groom side, then bride)</option>
+          <option value="efficient-bride">Efficient (bride side, then groom)</option>
           <option value="largest">Largest groups first</option>
           <option value="smallest">Smallest groups first</option>
           <option value="custom">Custom — drag to reorder</option>
@@ -645,6 +647,12 @@
       sorted = shots.slice().sort((a, b) => b.count - a.count);
     } else if (mode === 'smallest') {
       sorted = shots.slice().sort((a, b) => a.count - b.count);
+    } else if (mode === 'efficient' || mode === 'efficient-bride') {
+      // Build-and-subtract workflow: both-sides first, then one side largest→smallest, then the other.
+      const firstSide = mode === 'efficient-bride' ? 'bride' : 'groom';
+      const secondSide = firstSide === 'groom' ? 'bride' : 'groom';
+      const bySide = (side) => shots.filter(s => s.side === side).sort((a, b) => b.count - a.count);
+      sorted = [...bySide('both'), ...bySide(firstSide), ...bySide(secondSide)];
     } else if (mode === 'custom') {
       let order = (state.customOrder || []).slice();
       shots.forEach(s => { if (!order.includes(s.id)) order.push(s.id); });
@@ -690,33 +698,33 @@
     const groomParents = `${NAME(s.groomMom, "Groom's Mom")} + ${NAME(s.groomDad, "Groom's Dad")}`;
 
     const shots = [
-      { id: 'a1',  label: 'The Couple',              text: `${couple}` },
-      { id: 'a2',  label: 'Both Families',           text: `${couple} + ${brideParents} + ${groomParents}` },
-      { id: 'b1',  label: "Bride's Parents",         text: `${couple} + ${brideParents}` },
-      { id: 'b2',  label: 'Bride with Mom',          text: `${bride} + ${NAME(s.brideMom, "Bride's Mom")}` },
-      { id: 'b3',  label: 'Bride with Dad',          text: `${bride} + ${NAME(s.brideDad, "Bride's Dad")}` },
-      { id: 'b4',  label: 'Bride with Both Parents', text: `${bride} + ${brideParents}` },
-      { id: 'c1',  label: "Groom's Parents",         text: `${couple} + ${groomParents}` },
-      { id: 'c2',  label: 'Groom with Mom',          text: `${groom} + ${NAME(s.groomMom, "Groom's Mom")}` },
-      { id: 'c3',  label: 'Groom with Dad',          text: `${groom} + ${NAME(s.groomDad, "Groom's Dad")}` },
-      { id: 'c4',  label: 'Groom with Both Parents', text: `${groom} + ${groomParents}` },
-      { id: 'd1',  label: "Bride's Immediate Family", text: `${couple} + ${brideParents} + ${LIST(s.brideSiblings, "Bride's siblings")}` },
-      { id: 'd2',  label: 'Bride with Siblings',     text: `${bride} + ${LIST(s.brideSiblings, "Bride's siblings")}` },
-      { id: 'e1',  label: "Groom's Immediate Family", text: `${couple} + ${groomParents} + ${LIST(s.groomSiblings, "Groom's siblings")}` },
-      { id: 'e2',  label: 'Groom with Siblings',     text: `${groom} + ${LIST(s.groomSiblings, "Groom's siblings")}` },
-      { id: 'f1',  label: 'All Siblings Together',   text: `${couple} + ${LIST([...s.brideSiblings, ...s.groomSiblings], 'all siblings')}` },
-      { id: 'g1',  label: "Bride's Grandparents",    text: `${couple} + ${LIST(s.brideGrandparents, "Bride's grandparents")}` },
-      { id: 'g2',  label: "Groom's Grandparents",    text: `${couple} + ${LIST(s.groomGrandparents, "Groom's grandparents")}` },
-      { id: 'g3',  label: "Bride's Extended Family", text: `${couple} + ${brideParents} + ${LIST(s.brideSiblings, "Bride's siblings")} + ${LIST(s.brideExtended, "Bride's extended family")}` },
-      { id: 'g4',  label: "Groom's Extended Family", text: `${couple} + ${groomParents} + ${LIST(s.groomSiblings, "Groom's siblings")} + ${LIST(s.groomExtended, "Groom's extended family")}` },
-      { id: 'h1',  label: 'Full Wedding Party',      text: `${couple} + ${LIST(s.bridesmaids, 'bridesmaids')} + ${LIST(s.groomsmen, 'groomsmen')}` },
-      { id: 'h2',  label: 'Bride + Bridesmaids',     text: `${bride} + ${LIST(s.bridesmaids, 'bridesmaids')}` },
-      { id: 'h3',  label: 'Groom + Groomsmen',       text: `${groom} + ${LIST(s.groomsmen, 'groomsmen')}` },
-      { id: 'i1',  label: 'With the Officiant',      text: `${couple} + ${NAME(s.officiant, 'Officiant')}` },
+      { id: 'a1',  side: 'both',  label: 'The Couple',              text: `${couple}` },
+      { id: 'a2',  side: 'both',  label: 'Both Families',           text: `${couple} + ${brideParents} + ${groomParents}` },
+      { id: 'b1',  side: 'bride', label: "Bride's Parents",         text: `${couple} + ${brideParents}` },
+      { id: 'b2',  side: 'bride', label: 'Bride with Mom',          text: `${bride} + ${NAME(s.brideMom, "Bride's Mom")}` },
+      { id: 'b3',  side: 'bride', label: 'Bride with Dad',          text: `${bride} + ${NAME(s.brideDad, "Bride's Dad")}` },
+      { id: 'b4',  side: 'bride', label: 'Bride with Both Parents', text: `${bride} + ${brideParents}` },
+      { id: 'c1',  side: 'groom', label: "Groom's Parents",         text: `${couple} + ${groomParents}` },
+      { id: 'c2',  side: 'groom', label: 'Groom with Mom',          text: `${groom} + ${NAME(s.groomMom, "Groom's Mom")}` },
+      { id: 'c3',  side: 'groom', label: 'Groom with Dad',          text: `${groom} + ${NAME(s.groomDad, "Groom's Dad")}` },
+      { id: 'c4',  side: 'groom', label: 'Groom with Both Parents', text: `${groom} + ${groomParents}` },
+      { id: 'd1',  side: 'bride', label: "Bride's Immediate Family", text: `${couple} + ${brideParents} + ${LIST(s.brideSiblings, "Bride's siblings")}` },
+      { id: 'd2',  side: 'bride', label: 'Bride with Siblings',     text: `${bride} + ${LIST(s.brideSiblings, "Bride's siblings")}` },
+      { id: 'e1',  side: 'groom', label: "Groom's Immediate Family", text: `${couple} + ${groomParents} + ${LIST(s.groomSiblings, "Groom's siblings")}` },
+      { id: 'e2',  side: 'groom', label: 'Groom with Siblings',     text: `${groom} + ${LIST(s.groomSiblings, "Groom's siblings")}` },
+      { id: 'f1',  side: 'both',  label: 'All Siblings Together',   text: `${couple} + ${LIST([...s.brideSiblings, ...s.groomSiblings], 'all siblings')}` },
+      { id: 'g1',  side: 'bride', label: "Bride's Grandparents",    text: `${couple} + ${LIST(s.brideGrandparents, "Bride's grandparents")}` },
+      { id: 'g2',  side: 'groom', label: "Groom's Grandparents",    text: `${couple} + ${LIST(s.groomGrandparents, "Groom's grandparents")}` },
+      { id: 'g3',  side: 'bride', label: "Bride's Extended Family", text: `${couple} + ${brideParents} + ${LIST(s.brideSiblings, "Bride's siblings")} + ${LIST(s.brideExtended, "Bride's extended family")}` },
+      { id: 'g4',  side: 'groom', label: "Groom's Extended Family", text: `${couple} + ${groomParents} + ${LIST(s.groomSiblings, "Groom's siblings")} + ${LIST(s.groomExtended, "Groom's extended family")}` },
+      { id: 'h1',  side: 'both',  label: 'Full Wedding Party',      text: `${couple} + ${LIST(s.bridesmaids, 'bridesmaids')} + ${LIST(s.groomsmen, 'groomsmen')}` },
+      { id: 'h2',  side: 'bride', label: 'Bride + Bridesmaids',     text: `${bride} + ${LIST(s.bridesmaids, 'bridesmaids')}` },
+      { id: 'h3',  side: 'groom', label: 'Groom + Groomsmen',       text: `${groom} + ${LIST(s.groomsmen, 'groomsmen')}` },
+      { id: 'i1',  side: 'both',  label: 'With the Officiant',      text: `${couple} + ${NAME(s.officiant, 'Officiant')}` },
     ];
 
     // Append custom shots
-    s.custom.forEach((c, i) => shots.push({ id: 'custom_' + i, label: 'Custom', text: c, custom: true, customIndex: i }));
+    s.custom.forEach((c, i) => shots.push({ id: 'custom_' + i, side: 'both', label: 'Custom', text: c, custom: true, customIndex: i }));
 
     return shots;
   }
@@ -767,8 +775,8 @@
       const dragHandle = isCustom
         ? `<span class="drag-handle" title="Drag to reorder">⋮⋮</span>`
         : '';
-      const sizeBadge = (state.sortMode === 'largest' || state.sortMode === 'smallest')
-        ? `<span class="shot-count-badge">(${shot.count})</span>` : '';
+      const showCount = ['largest','smallest','efficient','efficient-bride'].includes(state.sortMode);
+      const sizeBadge = showCount ? `<span class="shot-count-badge">(${shot.count})</span>` : '';
       li.innerHTML = `
         <input type="checkbox" class="shot-check" ${!isDisabled ? 'checked' : ''}>
         ${dragHandle}
