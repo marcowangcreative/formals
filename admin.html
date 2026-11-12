@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shot List Admin · All Events</title>
+<meta name="color-scheme" content="light">
+<title>Formals · Admin</title>
 <style>
   :root {
     --ink: #2a2522;
@@ -14,14 +15,14 @@
     --muted: #7a6f63;
     --check: #4a6741;
     --warn: #c08060;
+    color-scheme: light;
   }
   * { box-sizing: border-box; }
   body {
-    font-family: 'Georgia', 'Times New Roman', serif;
+    font-family: Georgia, 'Times New Roman', serif;
     background: var(--paper);
     color: var(--ink);
     margin: 0;
-    padding: 0;
     line-height: 1.5;
   }
   .container {
@@ -43,7 +44,17 @@
     font-weight: normal;
   }
   header p { color: var(--muted); font-style: italic; margin: 0; font-size: 14px; }
-
+  .signed-in { margin-top: 10px; font-style: normal; font-size: 13px; color: var(--muted); }
+  .text-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--accent);
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+  }
   .panel {
     background: white;
     border: 1px solid var(--line);
@@ -62,7 +73,6 @@
     border-bottom: 1px solid var(--soft);
     padding-bottom: 14px;
   }
-
   .new-form {
     display: grid;
     grid-template-columns: 1.4fr 0.8fr auto;
@@ -88,7 +98,6 @@
     color: var(--ink);
     outline: none;
     border-radius: 2px;
-    transition: border-color 0.15s, background 0.15s;
   }
   .field input:focus { border-color: var(--accent); background: white; }
   .btn {
@@ -103,12 +112,14 @@
     cursor: pointer;
     border-radius: 2px;
     white-space: nowrap;
-    transition: opacity 0.15s;
   }
   .btn:hover { opacity: 0.85; }
-  .btn.danger { background: transparent; color: var(--warn); border: 1px solid var(--warn); padding: 4px 10px; font-size: 10px; }
-  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 6px 14px; font-size: 11px; }
-
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn:focus-visible, .text-btn:focus-visible, .link-actions a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; }
   th {
     text-align: left;
@@ -129,17 +140,21 @@
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: rgba(139, 107, 71, 0.04); }
   .couple-name { font-weight: 600; font-size: 15px; }
-  .slug-mono {
-    font-family: 'SF Mono', 'Monaco', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    background: var(--soft);
-    padding: 3px 8px;
-    border-radius: 3px;
-    letter-spacing: 0.02em;
+  .lock-badge {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: normal;
+    color: var(--check);
+    border: 1px solid var(--check);
+    padding: 2px 6px;
+    border-radius: 10px;
+    vertical-align: 2px;
   }
   .link-actions { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
-  .link-actions a {
+  .link-actions a, .link-actions button {
     color: var(--accent);
     font-size: 11px;
     letter-spacing: 0.08em;
@@ -147,11 +162,15 @@
     text-decoration: none;
     padding: 5px 10px;
     border-radius: 3px;
-    transition: background 0.15s, color 0.15s;
+    background: none;
+    border: none;
+    font-family: inherit;
+    cursor: pointer;
   }
-  .link-actions a:hover { background: var(--soft); }
-  .link-actions a.danger-action { color: var(--warn); }
-  .link-actions a.danger-action:hover { background: rgba(192, 128, 96, 0.1); }
+  .link-actions a:hover, .link-actions button:hover { background: var(--soft); }
+  .link-actions .danger-action { color: var(--warn); }
+  .link-actions .danger-action:hover { background: rgba(192, 128, 96, 0.1); }
+  .edited-abs { color: var(--muted); font-size: 11px; }
   .row-date {
     border: 1px solid transparent;
     background: transparent;
@@ -172,12 +191,23 @@
     font-style: italic;
   }
   .gate {
-    max-width: 380px;
+    max-width: 420px;
     margin: 120px auto;
     text-align: center;
+    padding: 0 20px;
   }
-  .gate h2 { font-size: 18px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: normal; }
+  .gate h2 {
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: normal;
+    margin-bottom: 8px;
+  }
+  .gate p { color: var(--muted); font-size: 14px; }
   .gate input { width: 100%; margin: 16px 0; text-align: center; }
+  .gate .btn { width: 100%; }
+  .gate-msg { color: var(--ink); font-size: 14px; margin-top: 16px; font-style: italic; }
+  .gate-msg.error { color: var(--warn); font-style: normal; }
   .toast {
     position: fixed;
     bottom: 24px;
@@ -191,12 +221,13 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s;
+    z-index: 20;
   }
   .toast.visible { opacity: 1; }
   .config-warning {
     background: #fff4e6;
     border: 1px solid var(--warn);
-    color: var(--warn);
+    color: #8a4b32;
     padding: 14px;
     border-radius: 3px;
     margin-bottom: 24px;
@@ -204,48 +235,59 @@
   }
   .config-warning code { background: rgba(0,0,0,0.06); padding: 2px 5px; border-radius: 2px; font-size: 12px; }
 </style>
+<script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<!-- Passphrase gate -->
+<div id="boot" class="gate">
+  <h2>Formals</h2>
+  <p>Checking sign-in…</p>
+</div>
+
 <div id="gate" class="gate" style="display:none">
-  <h2>Admin Access</h2>
-  <p style="color:var(--muted); font-size:13px;">Enter passphrase to manage events.</p>
-  <input type="password" id="gatePass" placeholder="Passphrase" autofocus>
-  <button class="btn" onclick="checkGate()">Enter</button>
-  <p id="gateError" style="color:var(--warn); font-size:12px; margin-top:10px; display:none;">Incorrect passphrase.</p>
+  <h2>Admin</h2>
+  <p>Sign in with the email on the admin allowlist. We'll email you a link. Open it in this browser.</p>
+  <form id="gateForm">
+    <div class="field">
+      <input type="email" id="gateEmail" placeholder="you@studio.com" autocomplete="email" required>
+    </div>
+    <button class="btn" type="submit" id="gateBtn">Email me a link</button>
+  </form>
+  <p id="gateMsg" class="gate-msg" style="display:none"></p>
+  <p style="margin-top:18px"><button type="button" class="text-btn" id="gateSignOut" style="display:none">Sign out</button></p>
 </div>
 
 <div id="app" class="container" style="display:none">
   <header>
     <h1>Shot List Events</h1>
-    <p>Manage couples &amp; their formal photo lists</p>
+    <p>Manage couples and their formal photo lists</p>
+    <p class="signed-in">Signed in as <span id="adminEmail"></span> · <button type="button" class="text-btn" id="signOut">Sign out</button></p>
   </header>
 
   <div id="configWarning" class="config-warning" style="display:none">
-    <strong>Supabase not configured.</strong> Paste your project URL and anon key at the top of the <code>&lt;script&gt;</code> block in <code>admin.html</code> and <code>wedding-shot-list.html</code>. See <code>SETUP.md</code>.
+    <strong>Supabase is not configured.</strong> Set the project URL and anon key in <code>config.js</code>. See <code>SETUP.md</code>.
   </div>
 
   <div class="panel">
     <h2>Add New Event</h2>
-    <div class="new-form">
+    <form class="new-form" id="newForm">
       <div class="field">
-        <label>Couple Names</label>
-        <input type="text" id="newCouple" placeholder="e.g. Maria & David Bueso" autocapitalize="words" required>
+        <label for="newCouple">Couple Names</label>
+        <input type="text" id="newCouple" placeholder="e.g. Maria &amp; David Bueso" autocapitalize="words" maxlength="120" required>
       </div>
       <div class="field">
-        <label>Event Date</label>
+        <label for="newDate">Event Date</label>
         <input type="date" id="newDate">
       </div>
-      <button class="btn" type="button" onclick="addNewEvent(event)">Create Event</button>
-    </div>
+      <button class="btn" type="submit" id="createBtn">Create Event</button>
+    </form>
     <pre id="debugLog" style="display:none;background:#fdecec;border:1px solid #c08060;color:#8b2a2a;padding:12px;margin-top:14px;font-size:12px;white-space:pre-wrap;word-break:break-word;"></pre>
   </div>
 
   <div class="panel">
     <h2>All Events</h2>
-    <div id="eventsContainer">
+    <div id="eventsContainer" class="table-wrap">
       <p class="empty">Loading…</p>
     </div>
   </div>
@@ -254,73 +296,67 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  // ============ Config ============
-  // Paste the same Supabase project URL + anon key here as in wedding-shot-list.html
-  const SUPABASE_URL = 'https://qhdzskmkijxfxxbsotkv.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFoZHpza21raWp4Znh4YnNvdGt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY0NzEyMzIsImV4cCI6MjA5MjA0NzIzMn0.Rkua9orChlAIcv9zfDHfpitqWKshpP-fDKTElkkB8k4';
+  const cfg = window.FORMALS || {};
+  const SUPABASE_URL = cfg.SUPABASE_URL || '';
+  const SUPABASE_ANON_KEY = cfg.SUPABASE_ANON_KEY || '';
+  const cloudConfigured = SUPABASE_URL.startsWith('https://')
+    && SUPABASE_ANON_KEY.length > 20
+    && SUPABASE_URL.indexOf('YOUR_') === -1
+    && SUPABASE_ANON_KEY.indexOf('YOUR_') === -1;
 
-  // Soft passphrase gate — not real security, just keeps the URL from being usable by anyone who stumbles on it.
-  // Change this to whatever you want.
-  const ADMIN_PASSPHRASE = 'changeme';
-
-  // Where shot-list.html lives, relative to admin.html.
-  // If you serve them at /shotlist.html and /admin.html, this is fine.
-  const SHOTLIST_PATH = 'wedding-shot-list.html';
-
-  const cloudConfigured = SUPABASE_URL.startsWith('http') && !SUPABASE_URL.includes('YOUR_');
   let db = null;
+  let enterPromise = null;
 
-  // ============ Passphrase Gate ============
-  function checkGate() {
-    const val = document.getElementById('gatePass').value;
-    if (val === ADMIN_PASSPHRASE) {
-      sessionStorage.setItem('shotlist_admin', '1');
-      showApp();
-    } else {
-      document.getElementById('gateError').style.display = 'block';
-    }
-  }
-  function showApp() {
-    document.getElementById('gate').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    init();
-  }
-  document.getElementById('gatePass').addEventListener('keydown', e => {
-    if (e.key === 'Enter') checkGate();
-  });
-
-  // Auto-let-in if already authed this session
-  if (sessionStorage.getItem('shotlist_admin') === '1') {
-    showApp();
-  } else {
-    document.getElementById('gate').style.display = 'block';
-  }
-
-  // ============ Helpers ============
   function toast(msg) {
     const el = document.getElementById('toast');
     el.textContent = msg;
     el.classList.add('visible');
-    setTimeout(() => el.classList.remove('visible'), 2200);
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove('visible'), 2200);
+  }
+
+  function showGateMessage(text, isError) {
+    const el = document.getElementById('gateMsg');
+    el.textContent = text || '';
+    el.style.display = text ? 'block' : 'none';
+    el.className = 'gate-msg' + (isError ? ' error' : '');
+  }
+
+  function showGate(sessionEmail) {
+    document.getElementById('boot').style.display = 'none';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('gate').style.display = 'block';
+    document.getElementById('gateSignOut').style.display = sessionEmail ? 'inline' : 'none';
+  }
+
+  function showConfigProblem() {
+    document.getElementById('boot').style.display = 'none';
+    document.getElementById('gate').style.display = 'block';
+    document.getElementById('gateForm').style.display = 'none';
+    showGateMessage('Supabase is not configured. Set the URL and anon key in config.js. See SETUP.md.', true);
   }
 
   function slugify(s) {
-    return s.toLowerCase()
+    const base = String(s || '').toLowerCase()
       .replace(/&/g, 'and')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
       .slice(0, 40);
+    return (base || 'event') + '-' + randomSuffix();
   }
 
   function randomSuffix() {
-    return Math.random().toString(36).slice(2, 6);
+    if (window.crypto && crypto.randomUUID) {
+      return crypto.randomUUID().replace(/-/g, '').slice(0, 10);
+    }
+    return Math.random().toString(36).slice(2, 12);
   }
 
   function fmtDate(iso) {
     if (!iso) return '—';
     const d = new Date(iso);
-    const now = new Date();
-    const diff = (now - d) / 1000;
+    if (isNaN(d.getTime())) return '—';
+    const diff = (Date.now() - d.getTime()) / 1000;
     if (diff < 60) return 'just now';
     if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
     if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
@@ -328,20 +364,135 @@
     return d.toLocaleDateString();
   }
 
-  function eventUrl(slug) {
-    const base = location.href.replace(/admin\.html.*$/, '');
-    return base + SHOTLIST_PATH + '?e=' + encodeURIComponent(slug);
+  function formatAbsolute(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+      hour: 'numeric', minute: '2-digit',
+    });
   }
 
-  // ============ Data ============
-  async function init() {
-    if (!cloudConfigured) {
-      document.getElementById('configWarning').style.display = 'block';
-      document.getElementById('eventsContainer').innerHTML = '<p class="empty">Configure Supabase to load events.</p>';
-      return;
+  function rowLabel(slug) {
+    const row = Array.from(document.querySelectorAll('tr[data-slug]')).find((tr) => tr.dataset.slug === slug);
+    if (!row) return 'this event';
+    const label = row.querySelector('.couple-label');
+    return label ? label.textContent.trim() : 'this event';
+  }
+
+  function eventUrl(slug) {
+    const base = location.href.replace(/admin\.html.*$/, '');
+    return base + 'wedding-shot-list.html?e=' + encodeURIComponent(slug);
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  function titleCaseName(s) {
+    return String(s || '').toLowerCase().replace(/\b([a-z])/g, (c) => c.toUpperCase());
+  }
+
+  function countNames(d) {
+    let n = 0;
+    ['bride', 'groom', 'brideMom', 'brideDad', 'groomMom', 'groomDad', 'officiant'].forEach((k) => {
+      if (d[k]) n += 1;
+    });
+    ['brideSiblings', 'groomSiblings', 'brideGrandparents', 'groomGrandparents',
+      'brideExtended', 'groomExtended', 'bridesmaids', 'groomsmen'].forEach((k) => {
+      if (Array.isArray(d[k])) n += d[k].length;
+    });
+    return n;
+  }
+
+  function eventDateKey(ev) {
+    const iso = ev && ev.data && ev.data.eventDate;
+    const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return Number.POSITIVE_INFINITY;
+    return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
+  }
+
+  function explain(err) {
+    const msg = (err && (err.message || err.details)) || 'Something went wrong';
+    if (/function|schema cache|does not exist|am_admin/i.test(msg)) {
+      return 'The database setup has not been applied yet. Run the SQL in SETUP.md. ' + msg;
     }
-    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    await refreshEvents();
+    return msg;
+  }
+
+  async function signOut() {
+    enterPromise = null;
+    if (db) await db.auth.signOut();
+    showGateMessage('');
+    showGate(null);
+  }
+
+  async function sendLink(email) {
+    const btn = document.getElementById('gateBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    showGateMessage('');
+    try {
+      const redirect = location.origin + location.pathname;
+      const { error } = await db.auth.signInWithOtp({
+        email: email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: redirect,
+        },
+      });
+      if (error) throw error;
+      showGateMessage('Check ' + email + ' for a sign-in link. Open it in this browser. It expires in about an hour.');
+    } catch (err) {
+      const raw = (err && err.message) || 'Could not send the link.';
+      let hint = raw;
+      if (/signups not allowed|user not found|otp_disabled/i.test(raw)) {
+        hint = 'That email is not an admin user yet. Add the user in Supabase (Authentication → Users) and add the same address to admin_allowlist. See SETUP.md.';
+      } else if (/redirect/i.test(raw)) {
+        hint = raw + ' Add this page to Authentication → URL Configuration → Redirect URLs.';
+      }
+      showGateMessage(hint, true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Email me a link';
+    }
+  }
+
+  async function enterApp(session) {
+    if (enterPromise) return enterPromise;
+    let keep = false;
+    enterPromise = (async () => {
+      const email = (session.user && session.user.email) || '';
+      const { data: allowed, error } = await db.rpc('am_admin');
+      if (error) {
+        showGate(email);
+        showGateMessage(explain(error), true);
+        return;
+      }
+      if (!allowed) {
+        showGate(email);
+        showGateMessage(email + ' is signed in, but that address is not on the admin allowlist. Add it with the SQL in SETUP.md, then sign in again.', true);
+        return;
+      }
+      keep = true;
+      document.getElementById('adminEmail').textContent = email;
+      document.getElementById('boot').style.display = 'none';
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      const url = new URL(location.href);
+      if (url.searchParams.has('code') || url.hash) {
+        history.replaceState({}, '', url.pathname);
+      }
+      await refreshEvents();
+    })();
+    try {
+      await enterPromise;
+    } finally {
+      if (!keep) enterPromise = null;
+    }
   }
 
   async function refreshEvents() {
@@ -350,123 +501,94 @@
     try {
       const { data, error } = await db
         .from('events')
-        .select('slug, couple_names, data, updated_at, created_at')
+        .select('slug, couple_names, data, locked, updated_at, created_at')
         .order('updated_at', { ascending: false });
       if (error) throw error;
       renderEvents(data || []);
-    } catch (e) {
-      console.error(e);
-      container.innerHTML = `<p class="empty" style="color:var(--warn)">Error loading events: ${e.message}</p>`;
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = '<p class="empty" style="color:var(--warn)"></p>';
+      container.querySelector('p').textContent = explain(err);
     }
-  }
-
-  function fmtEventDate(iso) {
-    if (!iso) return '';
-    const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!m) return '';
-    const dt = new Date(+m[1], +m[2] - 1, +m[3]);
-    if (isNaN(dt.getTime())) return '';
-    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
-
-  function eventDateKey(ev) {
-    const iso = ev && ev.data && ev.data.eventDate;
-    if (!iso) return Number.POSITIVE_INFINITY;
-    const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (!m) return Number.POSITIVE_INFINITY;
-    return new Date(+m[1], +m[2] - 1, +m[3]).getTime();
   }
 
   function renderEvents(events) {
     const container = document.getElementById('eventsContainer');
     if (!events.length) {
-      container.innerHTML = '<p class="empty">No events yet — add one above.</p>';
+      container.innerHTML = '<p class="empty">No events yet. Add one above.</p>';
       return;
     }
     const sorted = events.slice().sort((a, b) => eventDateKey(a) - eventDateKey(b));
-    let html = `
-      <table>
-        <thead>
-          <tr>
-            <th>Couple</th>
-            <th>Event Date</th>
-            <th>Names Entered</th>
-            <th>Last Update</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>`;
-    for (const ev of sorted) {
+    let html = '<table><thead><tr>'
+      + '<th>Couple</th><th>Event date</th><th>Names entered</th><th>Last edited</th><th>Actions</th>'
+      + '</tr></thead><tbody>';
+    sorted.forEach((ev) => {
       const d = ev.data || {};
-      const named = [d.bride, d.groom].filter(Boolean).join(' & ') || '—';
-      const couple = ev.couple_names || named;
+      const named = [d.bride, d.groom].filter(Boolean).join(' & ') || '';
+      const couple = ev.couple_names || named || 'Untitled';
       const nameCount = countNames(d);
-      const dateValue = d.eventDate || '';
-      const dateCell = `<input type="date" class="row-date" value="${escapeHtml(dateValue)}" onchange="updateEventDate('${escapeHtml(ev.slug)}', this.value)">`;
-      html += `
-        <tr data-slug="${escapeHtml(ev.slug)}">
-          <td class="couple-name">${escapeHtml(couple)}</td>
-          <td>${dateCell}</td>
-          <td>${nameCount} ${nameCount === 1 ? 'person' : 'people'}</td>
-          <td style="color:var(--muted)">${fmtDate(ev.updated_at)}</td>
-          <td>
-            <div class="link-actions">
-              <a href="${eventUrl(ev.slug)}" target="_blank">Open</a>
-              <a href="#" onclick="copyLink('${escapeHtml(ev.slug)}'); return false;">Copy link</a>
-              <a href="#" onclick="renameEvent('${escapeHtml(ev.slug)}'); return false;">Rename</a>
-              <a href="#" class="danger-action" onclick="deleteEvent('${escapeHtml(ev.slug)}'); return false;">Delete</a>
-            </div>
-          </td>
-        </tr>`;
-    }
+      const dateValue = /^\d{4}-\d{2}-\d{2}$/.test(d.eventDate || '') ? d.eventDate : '';
+      const badge = ev.locked ? '<span class="lock-badge">Locked</span>' : '';
+      const lockAction = ev.locked ? 'unlock' : 'lock';
+      const lockLabel = ev.locked ? 'Unlock' : 'Lock';
+      const slugAttr = escapeHtml(ev.slug);
+      html += '<tr data-slug="' + slugAttr + '">'
+        + '<td class="couple-name"><span class="couple-label">' + escapeHtml(couple) + '</span>' + badge + '</td>'
+        + '<td><input type="date" class="row-date" data-date="1" value="' + escapeHtml(dateValue) + '"></td>'
+        + '<td>' + nameCount + (nameCount === 1 ? ' person' : ' people') + '</td>'
+        + '<td><div>' + escapeHtml(fmtDate(ev.updated_at)) + '</div>'
+        + '<div class="edited-abs">' + escapeHtml(formatAbsolute(ev.updated_at)) + '</div></td>'
+        + '<td><div class="link-actions">'
+        + '<a href="' + escapeHtml(eventUrl(ev.slug)) + '" target="_blank" rel="noopener">Open</a>'
+        + '<a href="' + escapeHtml(eventUrl(ev.slug) + '&view=dayof') + '" target="_blank" rel="noopener">Day-of</a>'
+        + '<button type="button" data-action="copy">Copy link</button>'
+        + '<button type="button" data-action="rename">Rename</button>'
+        + '<button type="button" data-action="' + lockAction + '">' + lockLabel + '</button>'
+        + '<button type="button" class="danger-action" data-action="delete">Delete</button>'
+        + '</div></td></tr>';
+    });
     html += '</tbody></table>';
     container.innerHTML = html;
   }
 
-  function countNames(d) {
-    let n = 0;
-    ['bride','groom','brideMom','brideDad','groomMom','groomDad','officiant'].forEach(k => { if (d[k]) n++; });
-    ['brideSiblings','groomSiblings','brideGrandparents','groomGrandparents',
-     'brideExtended','groomExtended','bridesmaids','groomsmen'].forEach(k => {
-      if (Array.isArray(d[k])) n += d[k].length;
-    });
-    return n;
-  }
-
-  function escapeHtml(s) {
-    if (s == null) return '';
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-
-  function titleCaseName(s) {
-    return String(s || '').toLowerCase().replace(/\b([a-z])/g, c => c.toUpperCase());
+  async function expectWrite(query, label) {
+    const { data, error } = await query;
+    if (error) throw error;
+    if (!data || !data.length) {
+      throw new Error(label + ' did not save. Confirm this email is on the admin allowlist.');
+    }
+    return data;
   }
 
   async function addNewEvent(e) {
-    if (e && e.preventDefault) e.preventDefault();
+    e.preventDefault();
     const debugEl = document.getElementById('debugLog');
     debugEl.style.display = 'none';
-    const couple = titleCaseName(document.getElementById('newCouple').value.trim());
+    const couple = titleCaseName(document.getElementById('newCouple').value.trim()).slice(0, 120);
     if (!couple) { toast('Enter a couple name'); return; }
     const eventDate = document.getElementById('newDate').value || '';
-    const slug = slugify(couple) + '-' + randomSuffix();
-    if (!cloudConfigured) { toast('Configure Supabase first'); return; }
+    const slug = slugify(couple);
+    const btn = document.getElementById('createBtn');
+    btn.disabled = true;
     try {
-      const { error } = await db.from('events').insert({ slug, couple_names: couple, data: { eventDate } });
-      if (error) throw error;
+      await expectWrite(
+        db.from('events').insert({
+          slug: slug,
+          couple_names: couple,
+          data: eventDate ? { eventDate: eventDate } : {},
+        }).select('slug'),
+        'Create'
+      );
       document.getElementById('newCouple').value = '';
       document.getElementById('newDate').value = '';
       toast('Event created · ' + couple);
       await refreshEvents();
     } catch (err) {
       console.error('addNewEvent failed', err);
-      debugEl.textContent = 'CREATE EVENT FAILED\n\n'
-        + 'message: ' + (err.message || '(none)') + '\n'
-        + 'code: ' + (err.code || '(none)') + '\n'
-        + 'details: ' + (err.details || '(none)') + '\n'
-        + 'hint: ' + (err.hint || '(none)') + '\n\n'
-        + 'full: ' + JSON.stringify(err, Object.getOwnPropertyNames(err), 2);
+      debugEl.textContent = 'CREATE EVENT FAILED\n\n' + explain(err);
       debugEl.style.display = 'block';
+    } finally {
+      btn.disabled = false;
     }
   }
 
@@ -475,56 +597,154 @@
     try {
       await navigator.clipboard.writeText(url);
       toast('Link copied');
-    } catch (e) {
-      prompt('Copy this link:', url);
+    } catch (err) {
+      window.prompt('Copy this link:', url);
     }
   }
 
   async function updateEventDate(slug, dateValue) {
+    const value = /^\d{4}-\d{2}-\d{2}$/.test(dateValue || '') ? dateValue : '';
     try {
-      const { data, error: readErr } = await db.from('events').select('data').eq('slug', slug).single();
-      if (readErr) throw readErr;
-      const merged = Object.assign({}, data && data.data ? data.data : {}, { eventDate: dateValue || '' });
-      const { error } = await db.from('events').update({ data: merged, updated_at: new Date().toISOString() }).eq('slug', slug);
+      const { data, error } = await db.from('events').select('data').eq('slug', slug).maybeSingle();
       if (error) throw error;
-      toast(dateValue ? 'Date saved' : 'Date cleared');
+      if (!data) throw new Error('Event not found');
+      const merged = Object.assign({}, data.data || {}, { eventDate: value });
+      await expectWrite(
+        db.from('events').update({ data: merged }).eq('slug', slug).select('slug'),
+        'Date'
+      );
+      toast(value ? 'Date saved' : 'Date cleared');
       await refreshEvents();
     } catch (err) {
       console.error('updateEventDate failed', err);
-      toast('Error: ' + (err.message || 'date update failed'));
+      toast(explain(err));
     }
   }
 
   async function renameEvent(slug) {
-    const row = document.querySelector(`tr[data-slug="${slug}"]`);
-    const current = row ? row.querySelector('.couple-name').textContent : '';
-    const updated = prompt('New couple name:', current);
+    const current = rowLabel(slug);
+    const updated = window.prompt('Couple name', current);
     if (updated === null) return;
-    const trimmed = titleCaseName(updated.trim());
+    const trimmed = titleCaseName(updated.trim()).slice(0, 120);
     if (!trimmed) { toast('Name cannot be empty'); return; }
     if (trimmed === current) return;
     try {
-      const { error } = await db.from('events').update({ couple_names: trimmed }).eq('slug', slug);
-      if (error) throw error;
-      toast('Renamed · ' + slug);
+      await expectWrite(
+        db.from('events').update({ couple_names: trimmed }).eq('slug', slug).select('slug'),
+        'Rename'
+      );
+      toast('Renamed');
       await refreshEvents();
     } catch (err) {
       console.error('renameEvent failed', err);
-      toast('Error: ' + (err.message || 'rename failed'));
+      toast(explain(err));
+    }
+  }
+
+  async function setLocked(slug, locked) {
+    const msg = locked
+      ? 'Lock this list? The family can still open it, but they cannot edit names or shots until you unlock it.'
+      : 'Unlock this list? The family will be able to edit it again.';
+    if (!window.confirm(msg)) return;
+    try {
+      await expectWrite(
+        db.from('events').update({ locked: locked }).eq('slug', slug).select('slug'),
+        'Lock'
+      );
+      toast(locked ? 'Locked' : 'Unlocked');
+      await refreshEvents();
+    } catch (err) {
+      console.error('setLocked failed', err);
+      toast(explain(err));
     }
   }
 
   async function deleteEvent(slug) {
-    if (!confirm(`Delete event "${slug}"? This cannot be undone.`)) return;
+    const name = rowLabel(slug);
+    if (!window.confirm('Delete ' + name + '? This cannot be undone.')) return;
     try {
-      const { error } = await db.from('events').delete().eq('slug', slug);
-      if (error) throw error;
-      toast('Deleted · ' + slug);
+      await expectWrite(
+        db.from('events').delete().eq('slug', slug).select('slug'),
+        'Delete'
+      );
+      toast('Deleted');
       await refreshEvents();
     } catch (err) {
-      toast('Error: ' + err.message);
+      toast(explain(err));
     }
   }
+
+  document.getElementById('eventsContainer').addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    e.preventDefault();
+    const slug = btn.closest('tr').dataset.slug;
+    const action = btn.dataset.action;
+    if (action === 'copy') copyLink(slug);
+    else if (action === 'rename') renameEvent(slug);
+    else if (action === 'lock') setLocked(slug, true);
+    else if (action === 'unlock') setLocked(slug, false);
+    else if (action === 'delete') deleteEvent(slug);
+  });
+
+  document.getElementById('eventsContainer').addEventListener('change', (e) => {
+    const input = e.target.closest('input[data-date]');
+    if (!input) return;
+    updateEventDate(input.closest('tr').dataset.slug, input.value);
+  });
+
+  document.getElementById('newForm').addEventListener('submit', addNewEvent);
+  document.getElementById('signOut').addEventListener('click', signOut);
+  document.getElementById('gateSignOut').addEventListener('click', signOut);
+  document.getElementById('gateForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('gateEmail').value.trim().toLowerCase();
+    if (!email || email.indexOf('@') < 1) {
+      showGateMessage('Enter the admin email address.', true);
+      return;
+    }
+    sendLink(email);
+  });
+
+  async function boot() {
+    if (!cloudConfigured || !window.supabase || !window.supabase.createClient) {
+      showConfigProblem();
+      return;
+    }
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        detectSessionInUrl: true,
+        persistSession: true,
+        flowType: 'pkce',
+      },
+    });
+
+    const url = new URL(location.href);
+    const urlError = url.searchParams.get('error_description') || url.searchParams.get('error');
+
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+      await enterApp(session);
+      return;
+    }
+
+    showGate(null);
+    if (urlError) showGateMessage(urlError.replace(/\+/g, ' '), true);
+    if (url.searchParams.has('code') || url.searchParams.has('error') || url.hash) {
+      history.replaceState({}, '', url.pathname);
+    }
+
+    db.auth.onAuthStateChange((event, next) => {
+      if (event === 'SIGNED_IN' && next) setTimeout(() => enterApp(next), 0);
+      if (event === 'SIGNED_OUT') setTimeout(() => { enterPromise = null; showGate(null); }, 0);
+    });
+  }
+
+  boot().catch((err) => {
+    console.error(err);
+    showGate(null);
+    showGateMessage(explain(err), true);
+  });
 </script>
 </body>
 </html>
